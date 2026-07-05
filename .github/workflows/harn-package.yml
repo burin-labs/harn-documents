@@ -1,0 +1,19 @@
+name: Harn package
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@cargo-binstall
+      - run: cargo binstall harn-cli --no-confirm
+      - run: harn install --locked --offline || harn install
+      - run: harn test tests/
+      - run: harn package check
+      - run: harn package docs --check
+      - run: harn package pack --dry-run

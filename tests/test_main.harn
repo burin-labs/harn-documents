@@ -1,0 +1,71 @@
+import {
+  emit_file_artifact,
+  file_artifact_spec,
+  pandoc_docx_command,
+  render_markdown_report,
+  render_typst_report,
+  report_bundle,
+  typst_compile_command,
+} from "../lib/main"
+
+pipeline test_report_rendering(task) {
+  let report = {
+    title: "Code findings",
+    subtitle: "Burin/Harn artifact slice",
+    summary: "File artifacts now travel as references instead of raw payloads.",
+    sections: [{heading: "Scope", body: "Harn owns generic artifact semantics; Burin owns product UI."}],
+    findings: [
+      {
+        severity: "high",
+        title: "Raw document payloads should stay out of transcripts",
+        path: "Sources/Agent.swift",
+        line: 42,
+        evidence: ["artifact refs are safer to persist"],
+      },
+    ],
+  }
+  let markdown = render_markdown_report(report)
+  assert(contains(markdown, "# Code findings"))
+  assert(contains(markdown, "## Findings"))
+  assert(contains(markdown, "**high** Raw document payloads should stay out of transcripts"))
+  let typst = render_typst_report(report)
+  assert(contains(typst, "#set document"))
+  assert(contains(typst, "Code findings"))
+  let pdf_command = typst_compile_command("report.typ", "report.pdf", {})
+  assert_eq(pdf_command, ["typst", "compile", "report.typ", "report.pdf"])
+  let docx_command = pandoc_docx_command("report.md", "report.docx", {})
+  assert_eq(docx_command[0], "pandoc")
+  assert_eq(docx_command[5], "docx")
+  let bundle = report_bundle(report, "/tmp/code-findings")
+  assert_eq(bundle.pdf_path, "/tmp/code-findings.pdf")
+  assert(contains(bundle.markdown, "Burin/Harn artifact slice"))
+  assert_eq(bundle.artifacts[0].mime_type, "application/pdf")
+}
+
+pipeline test_file_artifact_spec(task) {
+  let spec = file_artifact_spec(
+    "/tmp/report.pdf",
+    "application/pdf",
+    {
+      name: "report.pdf",
+      size_bytes: 123,
+      sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      description: "Code findings report",
+    },
+  )
+  assert_eq(spec.uri, "file:///tmp/report.pdf")
+  assert_eq(spec.name, "report.pdf")
+  assert_eq(spec.mime_type, "application/pdf")
+  assert_eq(spec.size_bytes, 123)
+  assert_eq(spec.sha256, "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+  let session = agent_session_open("harn-documents-file-artifact-test")
+  agent_session_reset(session)
+  let emitted = emit_file_artifact(
+    "/tmp/report.pdf",
+    "application/pdf",
+    {name: "report.pdf", size_bytes: 123},
+    {session_id: session, artifact_id: "report-pdf", title: "Report PDF"},
+  )
+  assert(emitted.ok)
+  assert_eq(emitted.artifact_id, "report-pdf")
+}

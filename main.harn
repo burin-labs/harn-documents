@@ -1,0 +1,10 @@
+import "lib/main"
+
+pipeline default(task) {
+  let report = {
+    title: "Document artifact smoke",
+    summary: "harn-documents renders deterministic report sources.",
+    findings: [{severity: "info", title: "Package smoke path is wired"}],
+  }
+  log(render_markdown_report(report))
+}
