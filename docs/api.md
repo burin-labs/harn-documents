@@ -50,18 +50,10 @@ pub fn pandoc_docx_command(markdown_path, docx_path, options)
 
 ### fn `file_artifact_spec`
 
-Build an `artifact_emit("file", ...)`-ready file artifact reference.
+Build a file artifact reference for runtimes with file artifact support.
 
 ```harn
 pub fn file_artifact_spec(uri_or_path, mime_type, options)
-```
-
-### fn `emit_file_artifact`
-
-Emit a Harn file artifact event for a previously materialized local or artifact URI.
-
-```harn
-pub fn emit_file_artifact(uri_or_path, mime_type, spec_options, artifact_options)
 ```
 
 ### fn `report_bundle`

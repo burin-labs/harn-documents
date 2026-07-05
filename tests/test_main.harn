@@ -1,5 +1,4 @@
 import {
-  emit_file_artifact,
   file_artifact_spec,
   pandoc_docx_command,
   render_markdown_report,
@@ -58,14 +57,4 @@ pipeline test_file_artifact_spec(task) {
   assert_eq(spec.mime_type, "application/pdf")
   assert_eq(spec.size_bytes, 123)
   assert_eq(spec.sha256, "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
-  let session = agent_session_open("harn-documents-file-artifact-test")
-  agent_session_reset(session)
-  let emitted = emit_file_artifact(
-    "/tmp/report.pdf",
-    "application/pdf",
-    {name: "report.pdf", size_bytes: 123},
-    {session_id: session, artifact_id: "report-pdf", title: "Report PDF"},
-  )
-  assert(emitted.ok)
-  assert_eq(emitted.artifact_id, "report-pdf")
 }

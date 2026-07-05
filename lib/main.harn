@@ -236,7 +236,7 @@ pub fn pandoc_docx_command(markdown_path, docx_path, options) {
   return argv
 }
 
-/** Build an `artifact_emit("file", ...)`-ready file artifact reference. */
+/** Build a file artifact reference for runtimes with file artifact support. */
 pub fn file_artifact_spec(uri_or_path, mime_type, options) {
   let target = __text(uri_or_path)
   let uri = if starts_with(target, "file://")
@@ -270,11 +270,6 @@ pub fn file_artifact_spec(uri_or_path, mime_type, options) {
     spec = spec + {description: options.description}
   }
   return spec
-}
-
-/** Emit a Harn file artifact event for a previously materialized local or artifact URI. */
-pub fn emit_file_artifact(uri_or_path, mime_type, spec_options, artifact_options) {
-  return artifact_emit("file", file_artifact_spec(uri_or_path, mime_type, spec_options), artifact_options)
 }
 
 /** Return a deterministic report bundle without writing files. */

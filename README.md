@@ -25,8 +25,10 @@ import { file_artifact_spec, render_markdown_report, render_typst_report } from 
 ```
 
 The package returns deterministic Markdown and Typst source. Workflows can write
-those strings to files, invoke `typst compile` or `pandoc`, then publish the
-result with `artifact_emit("file", file_artifact_spec(path, mime, {}))`.
+those strings to files, invoke `typst compile` or `pandoc`, then build a
+portable file reference with `file_artifact_spec(path, mime, {})`. On Harn
+runtimes with first-class file artifacts, publish that reference with
+`artifact_emit("file", spec, options)`.
 
 ## Layering
 
