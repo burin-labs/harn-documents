@@ -21,7 +21,13 @@ harn package pack
 Consumers import stable modules through the `[exports]` entries in `harn.toml`.
 
 ```harn
-import { file_artifact_spec, render_markdown_report, render_typst_report } from "harn-documents/lib"
+import {
+  artifact_manifest,
+  artifact_session_updates_ndjson,
+  file_artifact_spec,
+  render_markdown_report,
+  render_typst_report,
+} from "harn-documents/lib"
 ```
 
 The package returns deterministic Markdown and Typst source. Workflows can write
@@ -30,8 +36,21 @@ portable file reference with `file_artifact_spec(path, mime, {})`. On Harn
 runtimes with first-class file artifacts, publish that reference with
 `artifact_emit("file", spec, options)`.
 
+For headless and managed-agent flows, collect produced files into a manifest and
+emit canonical Harn ACP artifact updates:
+
+```harn
+let report = file_artifact_spec("out/report.pdf", "application/pdf", {
+  size_bytes: 12345,
+  sha256: "sha256:...",
+})
+let manifest = artifact_manifest([report], {title: "Code findings"})
+let updates = artifact_session_updates_ndjson(manifest.artifacts, {})
+```
+
 ## Layering
 
 - Harn core: safe file artifact references and managed-agent artifact APIs.
-- `harn-documents`: reusable report/document helpers and skills.
+- `harn-documents`: reusable report/document helpers, file artifact manifests,
+  ACP update helpers, and skills.
 - Burin: coding-agent-specific prompts, report buttons, previews, and product UI.

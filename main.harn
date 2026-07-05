@@ -6,5 +6,13 @@ pipeline default(task) {
     summary: "harn-documents renders deterministic report sources.",
     findings: [{severity: "info", title: "Package smoke path is wired"}],
   }
+  let artifact_ref = file_artifact_spec(
+    "out/document-artifact-smoke.pdf",
+    "application/pdf",
+    {name: "document-artifact-smoke.pdf"},
+  )
+  let manifest = artifact_manifest([artifact_ref], {title: "Document artifact smoke"})
   log(render_markdown_report(report))
+  log(json_stringify(manifest))
+  log(artifact_session_updates_ndjson(manifest.artifacts, {}))
 }

@@ -1,5 +1,11 @@
 import {
+  artifact_manifest,
+  artifact_manifest_digest,
+  artifact_manifest_file_spec,
+  artifact_session_update,
+  artifact_session_updates_ndjson,
   file_artifact_spec,
+  normalize_file_artifact_spec,
   pandoc_docx_command,
   render_markdown_report,
   render_typst_report,
@@ -57,4 +63,57 @@ pipeline test_file_artifact_spec(task) {
   assert_eq(spec.mime_type, "application/pdf")
   assert_eq(spec.size_bytes, 123)
   assert_eq(spec.sha256, "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+}
+
+pipeline test_artifact_manifest_and_session_updates(task) {
+  let pdf = normalize_file_artifact_spec(
+    {
+      path: "/tmp/report.pdf",
+      mimeType: "application/pdf",
+      size_bytes: 1024,
+      sha256: "sha256:" + "a".repeat(64),
+      description: "Code findings PDF",
+    },
+    "",
+    {},
+  )
+  assert_eq(pdf.uri, "file:///tmp/report.pdf")
+  assert_eq(pdf.mime_type, "application/pdf")
+  assert_eq(pdf.size_bytes, 1024)
+  let png = file_artifact_spec(
+    "artifact://session/chart.png",
+    "image/png",
+    {name: "chart.png", size_bytes: 512, sha256: "sha256:" + "b".repeat(64)},
+  )
+  let manifest = artifact_manifest(
+    [pdf, png],
+    {
+      title: "Dogfood artifacts",
+      session_id: "ses_123",
+      run_id: "run_456",
+      created_at: "2026-07-05T00:00:00Z",
+    },
+  )
+  assert_eq(manifest.schema_version, "harn.artifacts.v1")
+  assert_eq(manifest.artifact_count, 2)
+  assert_eq(manifest.total_size_bytes, 1536)
+  assert_eq(manifest.artifacts[0].name, "report.pdf")
+  assert_eq(manifest.artifacts[1].uri, "artifact://session/chart.png")
+  assert(starts_with(artifact_manifest_digest(manifest), "sha256:"))
+  let manifest_spec = artifact_manifest_file_spec("/tmp/manifest.json", manifest, {})
+  assert_eq(manifest_spec.mime_type, "application/vnd.harn.artifact-manifest+json")
+  assert_eq(manifest_spec.name, "manifest.json")
+  assert(starts_with(manifest_spec.sha256, "sha256:"))
+  let update = artifact_session_update(pdf, {artifact_id: "artifact-report", title: "Report PDF"})
+  assert_eq(update.sessionUpdate, "artifact")
+  assert_eq(update._meta.harn.artifactId, "artifact-report")
+  assert_eq(update._meta.harn.kind, "file")
+  assert_eq(update._meta.harn.title, "Report PDF")
+  assert_eq(update._meta.harn.mimeType, "application/pdf")
+  assert_eq(update._meta.harn.sizeBytes, 1024)
+  assert_eq(update._meta.harn.spec.uri, "file:///tmp/report.pdf")
+  let ndjson = artifact_session_updates_ndjson([pdf, png], {metadata: {source: "test"}})
+  assert(contains(ndjson, "\"sessionUpdate\":\"artifact\""))
+  assert(contains(ndjson, "\"_meta\":{\"harn\""))
+  assert(contains(ndjson, "\"mimeType\":\"image/png\""))
 }
