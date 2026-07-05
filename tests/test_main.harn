@@ -1,10 +1,13 @@
 import {
   artifact_manifest,
   artifact_manifest_digest,
+  artifact_manifest_emit_args,
+  artifact_manifest_fallback,
   artifact_manifest_file_spec,
   artifact_manifest_mime_type,
   artifact_manifest_schema_url,
   artifact_manifest_schema_version,
+  artifact_manifest_session_update,
   artifact_session_update,
   artifact_session_updates_ndjson,
   file_artifact_spec,
@@ -116,6 +119,23 @@ pipeline test_artifact_manifest_and_session_updates(task) {
   assert_eq(manifest_spec.mime_type, artifact_manifest_mime_type())
   assert_eq(manifest_spec.name, "manifest.json")
   assert(starts_with(manifest_spec.sha256, "sha256:"))
+  let fallback = artifact_manifest_fallback(manifest)
+  assert(contains(fallback, "Dogfood artifacts: 2 file artifact(s)"))
+  assert(contains(fallback, "report.pdf (application/pdf, 1024 bytes)"))
+  let manifest_update = artifact_manifest_session_update(manifest, {artifact_id: "artifact-manifest"})
+  assert_eq(manifest_update.sessionUpdate, "artifact")
+  assert_eq(manifest_update._meta.harn.artifactId, "artifact-manifest")
+  assert_eq(manifest_update._meta.harn.kind, "artifact_manifest")
+  assert_eq(manifest_update._meta.harn.mimeType, artifact_manifest_mime_type())
+  assert_eq(manifest_update._meta.harn.spec.schema_version, artifact_manifest_schema_version())
+  assert_eq(manifest_update._meta.harn.metadata.schema_url, artifact_manifest_schema_url())
+  assert(starts_with(manifest_update._meta.harn.metadata.digest, "sha256:"))
+  let emit_args = artifact_manifest_emit_args(manifest, {session_id: "ses_123", max_bytes: 12345})
+  assert_eq(emit_args.kind, "artifact_manifest")
+  assert_eq(emit_args.spec.artifact_count, 2)
+  assert_eq(emit_args.options.session_id, "ses_123")
+  assert_eq(emit_args.options.max_bytes, 12345)
+  assert(starts_with(emit_args.options.artifact_id, "manifest-"))
   let update = artifact_session_update(pdf, {artifact_id: "artifact-report", title: "Report PDF"})
   assert_eq(update.sessionUpdate, "artifact")
   assert_eq(update._meta.harn.artifactId, "artifact-report")

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+- Added bundle-level artifact manifest session-update helpers and
+  `artifact_emit` argument construction for Harn's first-class
+  `artifact_manifest` runtime kind.
+
 ## 0.1.2
 
 - Added exported artifact manifest schema URL, version, and MIME helpers for
