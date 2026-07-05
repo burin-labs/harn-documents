@@ -19,8 +19,12 @@ Use `harn-documents` for the deterministic middle of a document workflow:
    - `pandoc <report.md> --from gfm --to docx -o <report.docx>` for DOCX.
 5. Verify produced files with available deterministic tools such as `stat`,
    `sha256`, `pdftotext`, Poppler rendering, or package-specific checks.
-6. Build file references with `file_artifact_spec(...)`. On Harn runtimes with
-   first-class file artifacts, emit them with `artifact_emit("file", spec, options)`.
+6. Build file references with `file_artifact_spec(...)`, then collect them with
+   `artifact_manifest(...)`.
+7. On Harn runtimes with first-class file artifacts, emit each file with
+   `artifact_emit("file", spec, options)`. For headless or managed-agent logs,
+   use `artifact_session_updates_ndjson(...)` to produce canonical Harn ACP
+   `session/update` artifact extension frames.
 
 Do not embed PDF/DOCX bytes in transcripts. Keep binary payloads on disk or in an
 artifact store, and pass `file://`, `artifact://`, `harn-artifact://`, or `urn:`

@@ -272,6 +272,144 @@ pub fn file_artifact_spec(uri_or_path, mime_type, options) {
   return spec
 }
 
+/** Normalize a loose file artifact reference into the stable harn-documents shape. */
+pub fn normalize_file_artifact_spec(input, mime_type, options) {
+  if type_of(input) == "dict" {
+    let target = input?.uri ?? input?.path ?? input?.url ?? input?.href ?? ""
+    let merged_options = (input ?? {}) + (options ?? {})
+    return file_artifact_spec(target, input?.mime_type ?? input?.mimeType ?? mime_type, merged_options)
+  }
+  return file_artifact_spec(input, mime_type, options ?? {})
+}
+
+fn __artifact_size(spec) {
+  if spec?.size_bytes != nil {
+    return spec.size_bytes
+  }
+  if spec?.sizeBytes != nil {
+    return spec.sizeBytes
+  }
+  return nil
+}
+
+fn __artifact_id(spec, options) {
+  let explicit = __text(
+    options?.artifact_id ?? options?.artifactId ?? spec?.artifact_id ?? spec?.artifactId ?? spec?.id,
+  )
+  if explicit != "" {
+    return explicit
+  }
+  let seed = __text(spec?.uri) + "\n" + __text(spec?.sha256 ?? spec?.content_sha256) + "\n"
+    + __text(spec?.mime_type)
+  return "file-" + sha256(seed)
+}
+
+fn __normalize_artifact_list(artifacts) {
+  var normalized = []
+  for artifact_item in __as_list(artifacts) {
+    normalized = normalized + [normalize_file_artifact_spec(artifact_item, artifact_item?.mime_type ?? "", {})]
+  }
+  return normalized
+}
+
+fn __total_size_bytes(artifacts) {
+  var total = 0
+  var has_size = false
+  for artifact_item in artifacts {
+    let size = __artifact_size(artifact_item)
+    if size != nil {
+      total = total + size
+      has_size = true
+    }
+  }
+  if !has_size {
+    return nil
+  }
+  return total
+}
+
+/** Build a portable manifest for one or more file artifacts. */
+pub fn artifact_manifest(artifacts, options) {
+  let normalized = __normalize_artifact_list(artifacts)
+  var manifest = {
+    schema_version: __nonempty(options?.schema_version, "harn.artifacts.v1"),
+    kind: "artifact_manifest",
+    title: __nonempty(options?.title, "Artifact manifest"),
+    artifact_count: len(normalized),
+    artifacts: normalized,
+  }
+  let total_size = __total_size_bytes(normalized)
+  if total_size != nil {
+    manifest = manifest + {total_size_bytes: total_size}
+  }
+  if __text(options?.session_id) != "" {
+    manifest = manifest + {session_id: __text(options.session_id)}
+  }
+  if __text(options?.run_id) != "" {
+    manifest = manifest + {run_id: __text(options.run_id)}
+  }
+  if __text(options?.created_at) != "" {
+    manifest = manifest + {created_at: __text(options.created_at)}
+  }
+  if options?.metadata != nil {
+    manifest = manifest + {metadata: options.metadata}
+  }
+  return manifest
+}
+
+/** Return a deterministic sha256 digest for a manifest object. */
+pub fn artifact_manifest_digest(manifest) {
+  return "sha256:" + sha256(json_stringify(manifest))
+}
+
+/** Build a JSON file artifact reference for a manifest written to disk. */
+pub fn artifact_manifest_file_spec(manifest_path, manifest, options) {
+  return file_artifact_spec(
+    manifest_path,
+    "application/vnd.harn.artifact-manifest+json",
+    (options ?? {})
+      + {
+      name: __nonempty(options?.name, path_basename(__text(manifest_path))),
+      sha256: artifact_manifest_digest(manifest),
+      description: __nonempty(options?.description, "Harn artifact manifest"),
+    },
+  )
+}
+
+/** Build a canonical Harn ACP `session/update` artifact extension payload. */
+pub fn artifact_session_update(spec, options) {
+  let normalized = normalize_file_artifact_spec(spec, spec?.mime_type ?? "", {})
+  let size = __artifact_size(normalized)
+  var harn = {
+    artifactId: __artifact_id(normalized, options ?? {}),
+    kind: __nonempty(options?.kind, "file"),
+    title: __nonempty(options?.title, normalized.name),
+    mimeType: normalized.mime_type,
+    spec: normalized,
+    provenance: options?.provenance ?? {},
+    metadata: options?.metadata ?? {},
+  }
+  if size != nil {
+    harn = harn + {sizeBytes: size}
+  }
+  if __text(options?.fallback) != "" {
+    harn = harn + {fallback: __text(options.fallback)}
+  }
+  return {sessionUpdate: "artifact", _meta: {harn: harn}}
+}
+
+/** Render artifact session updates as newline-delimited JSON for logs or fixtures. */
+pub fn artifact_session_updates_ndjson(artifacts, options) {
+  var lines = []
+  for artifact_item in __as_list(artifacts) {
+    lines = lines + [json_stringify(artifact_session_update(artifact_item, options ?? {}))]
+  }
+  if len(lines) == 0 {
+    return ""
+  }
+  return lines.join("\n") + "\n"
+}
+
 /** Return a deterministic report bundle without writing files. */
 pub fn report_bundle(report, output_stem) {
   let stem = __text(output_stem)

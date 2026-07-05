@@ -56,6 +56,54 @@ Build a file artifact reference for runtimes with file artifact support.
 pub fn file_artifact_spec(uri_or_path, mime_type, options)
 ```
 
+### fn `normalize_file_artifact_spec`
+
+Normalize a loose file artifact reference into the stable harn-documents shape.
+
+```harn
+pub fn normalize_file_artifact_spec(input, mime_type, options)
+```
+
+### fn `artifact_manifest`
+
+Build a portable manifest for one or more file artifacts.
+
+```harn
+pub fn artifact_manifest(artifacts, options)
+```
+
+### fn `artifact_manifest_digest`
+
+Return a deterministic sha256 digest for a manifest object.
+
+```harn
+pub fn artifact_manifest_digest(manifest)
+```
+
+### fn `artifact_manifest_file_spec`
+
+Build a JSON file artifact reference for a manifest written to disk.
+
+```harn
+pub fn artifact_manifest_file_spec(manifest_path, manifest, options)
+```
+
+### fn `artifact_session_update`
+
+Build a canonical Harn ACP `session/update` artifact extension payload.
+
+```harn
+pub fn artifact_session_update(spec, options)
+```
+
+### fn `artifact_session_updates_ndjson`
+
+Render artifact session updates as newline-delimited JSON for logs or fixtures.
+
+```harn
+pub fn artifact_session_updates_ndjson(artifacts, options)
+```
+
 ### fn `report_bundle`
 
 Return a deterministic report bundle without writing files.

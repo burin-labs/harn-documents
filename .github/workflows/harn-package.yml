@@ -8,10 +8,22 @@ on:
 jobs:
   package:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HARN_VERSION: 0.9.15
+      HARN_ARCHIVE: harn-x86_64-unknown-linux-gnu.tar.gz
     steps:
       - uses: actions/checkout@v4
-      - uses: taiki-e/install-action@cargo-binstall
-      - run: cargo binstall harn-cli --no-confirm
+      - name: Install Harn CLI
+        run: |
+          set -euo pipefail
+          base_url="https://github.com/burin-labs/harn/releases/download/v${HARN_VERSION}"
+          curl -fsSLO "${base_url}/SHA256SUMS"
+          curl -fsSLO "${base_url}/${HARN_ARCHIVE}"
+          grep "  ${HARN_ARCHIVE}$" SHA256SUMS | sha256sum -c -
+          tar -xzf "${HARN_ARCHIVE}"
+          sudo install -m 0755 harn /usr/local/bin/harn
+          harn --version
       - run: harn install --locked --offline || harn install
       - run: harn test tests/
       - run: harn package check
