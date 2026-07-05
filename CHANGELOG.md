@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Added exported artifact manifest schema URL, version, and MIME helpers for
+  the Harn-owned `harn.artifacts.v1` contract.
+
 ## 0.1.1
 
 - Added file artifact manifest helpers and canonical Harn ACP artifact update

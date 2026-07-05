@@ -23,6 +23,7 @@ Consumers import stable modules through the `[exports]` entries in `harn.toml`.
 ```harn
 import {
   artifact_manifest,
+  artifact_manifest_schema_url,
   artifact_session_updates_ndjson,
   file_artifact_spec,
   render_markdown_report,
@@ -35,6 +36,10 @@ those strings to files, invoke `typst compile` or `pandoc`, then build a
 portable file reference with `file_artifact_spec(path, mime, {})`. On Harn
 runtimes with first-class file artifacts, publish that reference with
 `artifact_emit("file", spec, options)`.
+
+`artifact_manifest_schema_url()` returns the Harn-owned JSON Schema for the
+manifest contract:
+`https://harnlang.com/schemas/artifact-manifest.v1.schema.json`.
 
 For headless and managed-agent flows, collect produced files into a manifest and
 emit canonical Harn ACP artifact updates:

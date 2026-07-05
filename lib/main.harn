@@ -1,5 +1,26 @@
 let DEFAULT_REPORT_TITLE = "Document report"
 
+let ARTIFACT_MANIFEST_SCHEMA_VERSION = "harn.artifacts.v1"
+
+let ARTIFACT_MANIFEST_SCHEMA_URL = "https://harnlang.com/schemas/artifact-manifest.v1.schema.json"
+
+let ARTIFACT_MANIFEST_MIME_TYPE = "application/vnd.harn.artifact-manifest+json"
+
+/** Return the canonical Harn artifact manifest schema version string. */
+pub fn artifact_manifest_schema_version() {
+  return ARTIFACT_MANIFEST_SCHEMA_VERSION
+}
+
+/** Return the public JSON Schema URL for `harn.artifacts.v1` manifests. */
+pub fn artifact_manifest_schema_url() {
+  return ARTIFACT_MANIFEST_SCHEMA_URL
+}
+
+/** Return the MIME type for serialized Harn artifact manifest JSON files. */
+pub fn artifact_manifest_mime_type() {
+  return ARTIFACT_MANIFEST_MIME_TYPE
+}
+
 fn __text(value) {
   if value == nil {
     return ""
@@ -332,7 +353,7 @@ fn __total_size_bytes(artifacts) {
 pub fn artifact_manifest(artifacts, options) {
   let normalized = __normalize_artifact_list(artifacts)
   var manifest = {
-    schema_version: __nonempty(options?.schema_version, "harn.artifacts.v1"),
+    schema_version: __nonempty(options?.schema_version, ARTIFACT_MANIFEST_SCHEMA_VERSION),
     kind: "artifact_manifest",
     title: __nonempty(options?.title, "Artifact manifest"),
     artifact_count: len(normalized),
@@ -366,7 +387,7 @@ pub fn artifact_manifest_digest(manifest) {
 pub fn artifact_manifest_file_spec(manifest_path, manifest, options) {
   return file_artifact_spec(
     manifest_path,
-    "application/vnd.harn.artifact-manifest+json",
+    ARTIFACT_MANIFEST_MIME_TYPE,
     (options ?? {})
       + {
       name: __nonempty(options?.name, path_basename(__text(manifest_path))),
