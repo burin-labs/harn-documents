@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1
 
 - Added file artifact manifest helpers and canonical Harn ACP artifact update
   NDJSON rendering for headless and managed-agent flows.
