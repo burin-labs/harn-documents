@@ -325,6 +325,14 @@ fn __artifact_id(spec, options) {
   return "file-" + sha256(seed)
 }
 
+fn __manifest_artifact_id(manifest, options) {
+  let explicit = __text(options?.artifact_id ?? options?.artifactId ?? manifest?.artifact_id ?? manifest?.artifactId)
+  if explicit != "" {
+    return explicit
+  }
+  return "manifest-" + sha256(json_stringify(manifest))
+}
+
 fn __normalize_artifact_list(artifacts) {
   var normalized = []
   for artifact_item in __as_list(artifacts) {
@@ -417,6 +425,75 @@ pub fn artifact_session_update(spec, options) {
     harn = harn + {fallback: __text(options.fallback)}
   }
   return {sessionUpdate: "artifact", _meta: {harn: harn}}
+}
+
+/** Render a plain-text fallback for a `harn.artifacts.v1` manifest. */
+pub fn artifact_manifest_fallback(manifest) {
+  let title = __nonempty(manifest?.title, "Artifact manifest")
+  let count = manifest?.artifact_count ?? len(__as_list(manifest?.artifacts))
+  var lines = [title + ": " + to_string(count) + " file artifact(s)"]
+  if manifest?.total_size_bytes != nil {
+    lines = lines + ["Total size: " + to_string(manifest.total_size_bytes) + " bytes"]
+  }
+  var rendered = 0
+  for artifact_item in __as_list(manifest?.artifacts) {
+    if rendered >= 10 {
+      continue
+    }
+    let name = __nonempty(artifact_item?.name, "file artifact")
+    let mime = __nonempty(artifact_item?.mime_type, "application/octet-stream")
+    let size = __artifact_size(artifact_item)
+    let suffix = if size == nil {
+      ""
+    } else {
+      ", " + to_string(size) + " bytes"
+    }
+    lines = lines + ["- " + name + " (" + mime + suffix + ")"]
+    rendered = rendered + 1
+  }
+  if count > rendered {
+    lines = lines + ["... " + to_string(count - rendered) + " more artifacts"]
+  }
+  return lines.join("\n")
+}
+
+/** Build a canonical Harn ACP artifact update for a bundle manifest. */
+pub fn artifact_manifest_session_update(manifest, options) {
+  let digest = artifact_manifest_digest(manifest)
+  let base_metadata = {schema_url: ARTIFACT_MANIFEST_SCHEMA_URL, digest: digest}
+  let metadata = (options?.metadata ?? {}) + base_metadata
+  let serialized = json_stringify(manifest)
+  var harn = {
+    artifactId: __manifest_artifact_id(manifest, options ?? {}),
+    kind: "artifact_manifest",
+    title: __nonempty(options?.title, __nonempty(manifest?.title, "Artifact manifest")),
+    mimeType: ARTIFACT_MANIFEST_MIME_TYPE,
+    spec: manifest,
+    fallback: __nonempty(options?.fallback, artifact_manifest_fallback(manifest)),
+    sizeBytes: len(serialized),
+    provenance: options?.provenance ?? {},
+    metadata: metadata,
+  }
+  return {sessionUpdate: "artifact", _meta: {harn: harn}}
+}
+
+/** Build `{kind, spec, options}` for calling Harn core `artifact_emit`. */
+pub fn artifact_manifest_emit_args(manifest, options) {
+  var emit_options = {
+    artifact_id: __manifest_artifact_id(manifest, options ?? {}),
+    title: __nonempty(options?.title, __nonempty(manifest?.title, "Artifact manifest")),
+    fallback: __nonempty(options?.fallback, artifact_manifest_fallback(manifest)),
+    metadata: (options?.metadata ?? {})
+      + {schema_url: ARTIFACT_MANIFEST_SCHEMA_URL, digest: artifact_manifest_digest(manifest)},
+    provenance: options?.provenance ?? {},
+  }
+  if options?.session_id != nil && __text(options.session_id) != "" {
+    emit_options = emit_options + {session_id: __text(options.session_id)}
+  }
+  if options?.max_bytes != nil {
+    emit_options = emit_options + {max_bytes: options.max_bytes}
+  }
+  return {kind: "artifact_manifest", spec: manifest, options: emit_options}
 }
 
 /** Render artifact session updates as newline-delimited JSON for logs or fixtures. */

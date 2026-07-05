@@ -23,7 +23,9 @@ Consumers import stable modules through the `[exports]` entries in `harn.toml`.
 ```harn
 import {
   artifact_manifest,
+  artifact_manifest_emit_args,
   artifact_manifest_schema_url,
+  artifact_manifest_session_update,
   artifact_session_updates_ndjson,
   file_artifact_spec,
   render_markdown_report,
@@ -51,6 +53,9 @@ let report = file_artifact_spec("out/report.pdf", "application/pdf", {
 })
 let manifest = artifact_manifest([report], {title: "Code findings"})
 let updates = artifact_session_updates_ndjson(manifest.artifacts, {})
+let manifest_update = artifact_manifest_session_update(manifest, {})
+let emit = artifact_manifest_emit_args(manifest, {})
+// artifact_emit(emit.kind, emit.spec, emit.options)
 ```
 
 ## Layering
