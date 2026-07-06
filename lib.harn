@@ -482,6 +482,27 @@ pub fn managed_agent_artifact_manifest_register_body(manifest, manifest_uri_or_p
   )
 }
 
+fn __managed_agent_bundle_context_options(options) {
+  var shared = {}
+  for field in ["workspace_id", "session_id", "task_id", "receipt_id", "source"] {
+    if __text(options?[field]) != "" {
+      shared[field] = __text(options[field])
+    }
+  }
+  if options?.metadata != nil {
+    shared = shared + {metadata: options.metadata}
+  }
+  return shared
+}
+
+fn __managed_agent_bundle_artifact_options(options) {
+  let context = __managed_agent_bundle_context_options(options ?? {})
+  if __text(options?.visibility) != "" {
+    return context + {visibility: __text(options.visibility)}
+  }
+  return context
+}
+
 /** Build a query dictionary for `GET /v1/artifacts`. */
 pub fn managed_agent_artifact_list_query(options) {
   var query = {}
@@ -514,6 +535,35 @@ pub fn managed_agent_artifact_register_request(spec, options) {
     MANAGED_AGENT_ARTIFACT_WRITE_SCOPE,
     {body: managed_agent_artifact_register_body(spec, options ?? {})},
   )
+}
+
+/** Build deterministic HTTP request descriptors for registering several artifacts. */
+pub fn managed_agent_artifact_register_requests(artifacts, options) {
+  var requests = []
+  for artifact_item in __as_list(artifacts) {
+    requests = requests + [managed_agent_artifact_register_request(artifact_item, options ?? {})]
+  }
+  return requests
+}
+
+/** Build a deterministic HTTP request descriptor for registering an artifact manifest. */
+pub fn managed_agent_artifact_manifest_register_request(manifest, manifest_uri_or_path, options) {
+  return __managed_agent_artifact_request(
+    "POST",
+    MANAGED_AGENT_ARTIFACTS_PATH,
+    MANAGED_AGENT_ARTIFACT_WRITE_SCOPE,
+    {body: managed_agent_artifact_manifest_register_body(manifest, manifest_uri_or_path, options ?? {})},
+  )
+}
+
+/** Build artifact and manifest registration requests for a complete artifact bundle. */
+pub fn managed_agent_artifact_bundle_register_requests(manifest, manifest_uri_or_path, options) {
+  let context = __managed_agent_bundle_context_options(options ?? {})
+  let artifact_options = __managed_agent_bundle_artifact_options(options ?? {})
+    + (options?.artifact_options ?? options?.artifactOptions ?? {})
+  let manifest_options = context + (options?.manifest_options ?? options?.manifestOptions ?? {})
+  return managed_agent_artifact_register_requests(manifest?.artifacts ?? [], artifact_options)
+    + [managed_agent_artifact_manifest_register_request(manifest, manifest_uri_or_path, manifest_options)]
 }
 
 /** Build a deterministic HTTP request descriptor for listing artifacts. */

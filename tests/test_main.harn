@@ -11,6 +11,7 @@ import {
   artifact_session_update,
   artifact_session_updates_ndjson,
   file_artifact_spec,
+  managed_agent_artifact_bundle_register_requests,
   managed_agent_artifact_content_path,
   managed_agent_artifact_content_request,
   managed_agent_artifact_get_request,
@@ -18,9 +19,11 @@ import {
   managed_agent_artifact_list_query,
   managed_agent_artifact_list_request,
   managed_agent_artifact_manifest_register_body,
+  managed_agent_artifact_manifest_register_request,
   managed_agent_artifact_path,
   managed_agent_artifact_register_body,
   managed_agent_artifact_register_request,
+  managed_agent_artifact_register_requests,
   managed_agent_artifacts_path,
   normalize_file_artifact_spec,
   pandoc_docx_command,
@@ -248,4 +251,67 @@ pipeline test_managed_agent_artifact_kind_and_manifest_body(task) {
   assert_eq(body.metadata.schema_url, artifact_manifest_schema_url())
   assert_eq(body.metadata.digest, artifact_manifest_digest(manifest))
   assert_eq(body.sha256, replace(artifact_manifest_digest(manifest), "sha256:", ""))
+}
+
+pipeline test_managed_agent_artifact_bundle_register_requests(task) {
+  let pdf = file_artifact_spec(
+    "artifact://session/code-findings.pdf",
+    "application/pdf",
+    {name: "code-findings.pdf", size_bytes: 2280, sha256: "sha256:" + "d".repeat(64)},
+  )
+  let preview = file_artifact_spec(
+    "artifact://session/code-findings-preview-1.png",
+    "image/png",
+    {name: "code-findings-preview-1.png", size_bytes: 76246, sha256: "sha256:" + "e".repeat(64)},
+  )
+  let manifest = artifact_manifest(
+    [pdf, preview],
+    {
+      title: "PDF media dogfood",
+      session_id: "session_123",
+      task_id: "task_123",
+      metadata: {source: "unit-test"},
+    },
+  )
+  let artifact_requests = managed_agent_artifact_register_requests(
+    manifest.artifacts,
+    {visibility: "internal", session_id: "session_123"},
+  )
+  assert_eq(len(artifact_requests), 2)
+  assert_eq(artifact_requests[0].method, "POST")
+  assert_eq(artifact_requests[0].path, "/v1/artifacts")
+  assert_eq(artifact_requests[0].body.kind, "file")
+  assert_eq(artifact_requests[1].body.kind, "image")
+  let manifest_request = managed_agent_artifact_manifest_register_request(
+    manifest,
+    "artifact://session/artifact-manifest.json",
+    {session_id: "session_123"},
+  )
+  assert_eq(manifest_request.body.kind, "receipt")
+  assert_eq(manifest_request.body.visibility, "receipt_only")
+  assert_eq(manifest_request.body.metadata.digest, artifact_manifest_digest(manifest))
+  let bundle_requests = managed_agent_artifact_bundle_register_requests(
+    manifest,
+    "artifact://session/artifact-manifest.json",
+    {
+      visibility: "internal",
+      workspace_id: "workspace_123",
+      session_id: "session_123",
+      task_id: "task_123",
+      metadata: {source: "bundle-test"},
+      manifest_options: {metadata: {source: "manifest-test"}},
+    },
+  )
+  assert_eq(len(bundle_requests), 3)
+  assert_eq(bundle_requests[0].body.kind, "file")
+  assert_eq(bundle_requests[1].body.kind, "image")
+  assert_eq(bundle_requests[2].body.kind, "receipt")
+  assert_eq(bundle_requests[0].body.visibility, "internal")
+  assert_eq(bundle_requests[1].body.visibility, "internal")
+  assert_eq(bundle_requests[2].body.visibility, "receipt_only")
+  assert_eq(bundle_requests[0].body.workspace_id, "workspace_123")
+  assert_eq(bundle_requests[1].body.task_id, "task_123")
+  assert_eq(bundle_requests[2].body.session_id, "session_123")
+  assert_eq(bundle_requests[0].body.metadata.source, "bundle-test")
+  assert_eq(bundle_requests[2].body.metadata.source, "manifest-test")
 }

@@ -28,6 +28,7 @@ import {
   artifact_manifest_session_update,
   artifact_session_updates_ndjson,
   file_artifact_spec,
+  managed_agent_artifact_bundle_register_requests,
   managed_agent_artifact_manifest_register_body,
   managed_agent_artifact_register_request,
   render_markdown_report,
@@ -73,6 +74,11 @@ let manifest_body = managed_agent_artifact_manifest_register_body(
   manifest,
   "artifact://session/artifact-manifest.json",
   {session_id: "ses_123"},
+)
+let bundle_requests = managed_agent_artifact_bundle_register_requests(
+  manifest,
+  "artifact://session/artifact-manifest.json",
+  {visibility: "internal", session_id: "ses_123", task_id: "task_456"},
 )
 ```
 
