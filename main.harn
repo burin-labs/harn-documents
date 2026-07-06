@@ -1,4 +1,4 @@
-import "lib/main"
+import "lib"
 
 pipeline default(task) {
   let report = {
