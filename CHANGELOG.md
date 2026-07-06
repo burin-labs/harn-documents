@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4
+
+- Added deterministic Managed Agents `/v1/artifacts` request helpers for
+  registering file specs and artifact manifests, listing artifacts, and reading
+  metadata/content paths.
+
 ## 0.1.3
 
 - Added bundle-level artifact manifest session-update helpers and

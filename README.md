@@ -28,6 +28,8 @@ import {
   artifact_manifest_session_update,
   artifact_session_updates_ndjson,
   file_artifact_spec,
+  managed_agent_artifact_manifest_register_body,
+  managed_agent_artifact_register_request,
   render_markdown_report,
   render_typst_report,
 } from "harn-documents/lib"
@@ -58,9 +60,25 @@ let emit = artifact_manifest_emit_args(manifest, {})
 // artifact_emit(emit.kind, emit.spec, emit.options)
 ```
 
+For Managed Agents API hosts such as `harn serve api` or Harn Cloud, convert the
+same file references into deterministic `/v1/artifacts` request descriptors:
+
+```harn
+let request = managed_agent_artifact_register_request(report, {
+  visibility: "internal",
+  session_id: "ses_123",
+  task_id: "task_456",
+})
+let manifest_body = managed_agent_artifact_manifest_register_body(
+  manifest,
+  "artifact://session/artifact-manifest.json",
+  {session_id: "ses_123"},
+)
+```
+
 ## Layering
 
 - Harn core: safe file artifact references and managed-agent artifact APIs.
 - `harn-documents`: reusable report/document helpers, file artifact manifests,
-  ACP update helpers, and skills.
+  ACP update helpers, Managed Agents artifact request helpers, and skills.
 - Burin: coding-agent-specific prompts, report buttons, previews, and product UI.
