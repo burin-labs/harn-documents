@@ -28,7 +28,7 @@ import {
   render_typst_report,
   report_bundle,
   typst_compile_command,
-} from "../lib/main"
+} from "../lib"
 
 pipeline test_artifact_manifest_contract_metadata(task) {
   assert_eq(artifact_manifest_schema_version(), "harn.artifacts.v1")

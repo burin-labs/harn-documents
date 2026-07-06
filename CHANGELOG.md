@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.5
+
+- Moved the public `lib` export to `lib.harn` so installed consumers can import
+  helpers with the documented `harn-documents/lib` module path.
+
 ## 0.1.4
 
 - Added deterministic Managed Agents `/v1/artifacts` request helpers for
