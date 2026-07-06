@@ -11,6 +11,17 @@ import {
   artifact_session_update,
   artifact_session_updates_ndjson,
   file_artifact_spec,
+  managed_agent_artifact_content_path,
+  managed_agent_artifact_content_request,
+  managed_agent_artifact_get_request,
+  managed_agent_artifact_kind,
+  managed_agent_artifact_list_query,
+  managed_agent_artifact_list_request,
+  managed_agent_artifact_manifest_register_body,
+  managed_agent_artifact_path,
+  managed_agent_artifact_register_body,
+  managed_agent_artifact_register_request,
+  managed_agent_artifacts_path,
   normalize_file_artifact_spec,
   pandoc_docx_command,
   render_markdown_report,
@@ -148,4 +159,93 @@ pipeline test_artifact_manifest_and_session_updates(task) {
   assert(contains(ndjson, "\"sessionUpdate\":\"artifact\""))
   assert(contains(ndjson, "\"_meta\":{\"harn\""))
   assert(contains(ndjson, "\"mimeType\":\"image/png\""))
+}
+
+pipeline test_managed_agent_artifact_api_helpers(task) {
+  assert_eq(managed_agent_artifacts_path(), "/v1/artifacts")
+  let pdf = file_artifact_spec(
+    "/tmp/report.pdf",
+    "application/pdf",
+    {
+      name: "report.pdf",
+      size_bytes: 4096,
+      sha256: "sha256:" + "c".repeat(64),
+      description: "Code findings PDF",
+    },
+  )
+  let body = managed_agent_artifact_register_body(
+    pdf,
+    {
+      visibility: "internal",
+      workspace_id: "workspace_123",
+      session_id: "session_123",
+      task_id: "task_123",
+      title: "Findings report",
+      metadata: {source: "unit-test"},
+    },
+  )
+  assert_eq(body.kind, "file")
+  assert_eq(body.mime_type, "application/pdf")
+  assert_eq(body.uri, "file:///tmp/report.pdf")
+  assert_eq(body.visibility, "internal")
+  assert_eq(body.sha256, "c".repeat(64))
+  assert_eq(body.size_bytes, 4096)
+  assert_eq(body.name, "report.pdf")
+  assert_eq(body.title, "Findings report")
+  assert_eq(body.workspace_id, "workspace_123")
+  assert_eq(body.session_id, "session_123")
+  assert_eq(body.task_id, "task_123")
+  assert_eq(body.metadata.source, "unit-test")
+  assert_eq(body.metadata.description, "Code findings PDF")
+  let register = managed_agent_artifact_register_request(pdf, {visibility: "public"})
+  assert_eq(register.method, "POST")
+  assert_eq(register.path, "/v1/artifacts")
+  assert_eq(register.scopes, ["artifacts:write"])
+  assert_eq(register.body.visibility, "public")
+  let query = managed_agent_artifact_list_query({workspace_id: "workspace_123", limit: 50})
+  assert_eq(query.workspace_id, "workspace_123")
+  assert_eq(query.limit, 50)
+  let list = managed_agent_artifact_list_request({task_id: "task_123"})
+  assert_eq(list.method, "GET")
+  assert_eq(list.path, "/v1/artifacts")
+  assert_eq(list.scopes, ["artifacts:read"])
+  assert_eq(list.query.task_id, "task_123")
+  assert_eq(managed_agent_artifact_path("artifact/id"), "/v1/artifacts/artifact%2Fid")
+  assert_eq(managed_agent_artifact_content_path("artifact/id"), "/v1/artifacts/artifact%2Fid/content")
+  assert_eq(managed_agent_artifact_get_request("artifact_123", {}).path, "/v1/artifacts/artifact_123")
+  assert_eq(
+    managed_agent_artifact_content_request("artifact_123", {}).path,
+    "/v1/artifacts/artifact_123/content",
+  )
+}
+
+pipeline test_managed_agent_artifact_kind_and_manifest_body(task) {
+  assert_eq(managed_agent_artifact_kind({mime_type: "image/png", name: "plot.png"}, {}), "image")
+  assert_eq(managed_agent_artifact_kind({mime_type: "text/plain", name: "run.log"}, {}), "log")
+  assert_eq(managed_agent_artifact_kind({mime_type: "text/csv", name: "table.csv"}, {}), "dataset")
+  assert_eq(managed_agent_artifact_kind({mime_type: "text/plain", name: "change.diff"}, {}), "diff")
+  assert_eq(managed_agent_artifact_kind({mime_type: "text/plain", name: "change.patch"}, {}), "patch")
+  assert_eq(
+    managed_agent_artifact_kind({mime_type: "application/pdf", name: "report.pdf"}, {}),
+    "file",
+  )
+  let report = file_artifact_spec(
+    "artifact://session/report.pdf",
+    "application/pdf",
+    {name: "report.pdf", size_bytes: 1024, sha256: "sha256:" + "a".repeat(64)},
+  )
+  let manifest = artifact_manifest([report], {title: "Managed report bundle"})
+  let body = managed_agent_artifact_manifest_register_body(
+    manifest,
+    "artifact://session/artifact-manifest.json",
+    {session_id: "session_123"},
+  )
+  assert_eq(body.kind, "receipt")
+  assert_eq(body.mime_type, artifact_manifest_mime_type())
+  assert_eq(body.uri, "artifact://session/artifact-manifest.json")
+  assert_eq(body.visibility, "receipt_only")
+  assert_eq(body.session_id, "session_123")
+  assert_eq(body.metadata.schema_url, artifact_manifest_schema_url())
+  assert_eq(body.metadata.digest, artifact_manifest_digest(manifest))
+  assert_eq(body.sha256, replace(artifact_manifest_digest(manifest), "sha256:", ""))
 }

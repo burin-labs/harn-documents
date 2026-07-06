@@ -25,6 +25,10 @@ Use `harn-documents` for the deterministic middle of a document workflow:
    `artifact_emit("file", spec, options)`. For headless or managed-agent logs,
    use `artifact_session_updates_ndjson(...)` to produce canonical Harn ACP
    `session/update` artifact extension frames.
+8. For Managed Agents API hosts (`harn serve api`, Harn Cloud), use
+   `managed_agent_artifact_register_request(...)` for each produced file and
+   `managed_agent_artifact_manifest_register_body(...)` for the manifest file
+   instead of hand-building `/v1/artifacts` JSON.
 
 Do not embed PDF/DOCX bytes in transcripts. Keep binary payloads on disk or in an
 artifact store, and pass `file://`, `artifact://`, `harn-artifact://`, or `urn:`
