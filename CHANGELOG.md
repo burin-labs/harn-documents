@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6
+
+- Added deterministic Managed Agents artifact bundle request helpers that build
+  registration descriptors for every artifact in a manifest plus the manifest
+  receipt itself.
+
 ## 0.1.5
 
 - Moved the public `lib` export to `lib.harn` so installed consumers can import
