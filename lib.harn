@@ -1,20 +1,20 @@
-let DEFAULT_REPORT_TITLE = "Document report"
+const DEFAULT_REPORT_TITLE = "Document report"
 
-let ARTIFACT_MANIFEST_SCHEMA_VERSION = "harn.artifacts.v1"
+const ARTIFACT_MANIFEST_SCHEMA_VERSION = "harn.artifacts.v1"
 
-let ARTIFACT_MANIFEST_SCHEMA_URL = "https://harnlang.com/schemas/artifact-manifest.v1.schema.json"
+const ARTIFACT_MANIFEST_SCHEMA_URL = "https://harnlang.com/schemas/artifact-manifest.v1.schema.json"
 
-let ARTIFACT_MANIFEST_MIME_TYPE = "application/vnd.harn.artifact-manifest+json"
+const ARTIFACT_MANIFEST_MIME_TYPE = "application/vnd.harn.artifact-manifest+json"
 
-let MANAGED_AGENT_ARTIFACTS_PATH = "/v1/artifacts"
+const MANAGED_AGENT_ARTIFACTS_PATH = "/v1/artifacts"
 
-let MANAGED_AGENT_ARTIFACT_READ_SCOPE = "artifacts:read"
+const MANAGED_AGENT_ARTIFACT_READ_SCOPE = "artifacts:read"
 
-let MANAGED_AGENT_ARTIFACT_WRITE_SCOPE = "artifacts:write"
+const MANAGED_AGENT_ARTIFACT_WRITE_SCOPE = "artifacts:write"
 
-let MANAGED_AGENT_ARTIFACT_KINDS = ["file", "patch", "image", "log", "diff", "receipt", "snapshot", "dataset", "other"]
+const MANAGED_AGENT_ARTIFACT_KINDS = ["file", "patch", "image", "log", "diff", "receipt", "snapshot", "dataset", "other"]
 
-let MANAGED_AGENT_ARTIFACT_VISIBILITIES = ["public", "internal", "receipt_only"]
+const MANAGED_AGENT_ARTIFACT_VISIBILITIES = ["public", "internal", "receipt_only"]
 
 /** Return the canonical Harn artifact manifest schema version string. */
 pub fn artifact_manifest_schema_version() {
@@ -48,7 +48,7 @@ fn __line(value) {
 }
 
 fn __nonempty(value, fallback) {
-  let text = __line(value)
+  const text = __line(value)
   if text == "" {
     return fallback
   }
@@ -83,11 +83,11 @@ fn __finding_location(finding) {
   if type_of(finding) != "dict" {
     return ""
   }
-  let path = __line(finding?.path ?? finding?.file ?? finding?.location)
+  const path = __line(finding?.path ?? finding?.file ?? finding?.location)
   if path == "" {
     return ""
   }
-  let line = __line(finding?.line)
+  const line = __line(finding?.line)
   if line == "" {
     return path
   }
@@ -95,17 +95,17 @@ fn __finding_location(finding) {
 }
 
 fn __append_sections(lines, sections) {
-  var out = lines
+  let out = lines
   for section in __as_list(sections) {
     if type_of(section) == "dict" {
-      let heading = __nonempty(section?.heading ?? section?.title, "Section")
-      let body = __text(section?.body ?? section?.text)
+      const heading = __nonempty(section?.heading ?? section?.title, "Section")
+      const body = __text(section?.body ?? section?.text)
       out = out + ["", "## " + heading]
       if body != "" {
         out = out + ["", body]
       }
     } else {
-      let body = __text(section)
+      const body = __text(section)
       if body != "" {
         out = out + ["", "## Section", "", body]
       }
@@ -115,22 +115,22 @@ fn __append_sections(lines, sections) {
 }
 
 fn __append_findings(lines, findings) {
-  let items = __as_list(findings)
+  const items = __as_list(findings)
   if len(items) == 0 {
     return lines
   }
-  var out = lines + ["", "## Findings", ""]
+  let out = lines + ["", "## Findings", ""]
   for finding in items {
-    let severity = __finding_severity(finding)
-    let location = __finding_location(finding)
-    let suffix = if location == "" {
+    const severity = __finding_severity(finding)
+    const location = __finding_location(finding)
+    const suffix = if location == "" {
       ""
     } else {
       " (" + location + ")"
     }
     out = out + ["- **" + severity + "** " + __finding_title(finding) + suffix]
     if type_of(finding) == "dict" {
-      let detail = __text(finding?.detail ?? finding?.body)
+      const detail = __text(finding?.detail ?? finding?.body)
       if detail != "" {
         out = out + ["  " + detail]
       }
@@ -147,17 +147,17 @@ fn __typst_text(value) {
 }
 
 fn __append_typst_sections(lines, sections) {
-  var out = lines
+  let out = lines
   for section in __as_list(sections) {
     if type_of(section) == "dict" {
-      let heading = __nonempty(section?.heading ?? section?.title, "Section")
-      let body = __text(section?.body ?? section?.text)
+      const heading = __nonempty(section?.heading ?? section?.title, "Section")
+      const body = __text(section?.body ?? section?.text)
       out = out + ["", "== " + __typst_text(heading)]
       if body != "" {
         out = out + ["", "#par(justify: true)[" + __typst_text(body) + "]"]
       }
     } else {
-      let body = __text(section)
+      const body = __text(section)
       if body != "" {
         out = out
           + ["", "== " + __typst_text("Section"), "", "#par(justify: true)[" + __typst_text(body) + "]"]
@@ -168,15 +168,15 @@ fn __append_typst_sections(lines, sections) {
 }
 
 fn __append_typst_findings(lines, findings) {
-  let items = __as_list(findings)
+  const items = __as_list(findings)
   if len(items) == 0 {
     return lines
   }
-  var out = lines + ["", "== " + __typst_text("Findings"), ""]
+  let out = lines + ["", "== " + __typst_text("Findings"), ""]
   for finding in items {
-    let severity = __finding_severity(finding)
-    let location = __finding_location(finding)
-    let suffix = if location == "" {
+    const severity = __finding_severity(finding)
+    const location = __finding_location(finding)
+    const suffix = if location == "" {
       ""
     } else {
       " (" + location + ")"
@@ -184,7 +184,7 @@ fn __append_typst_findings(lines, findings) {
     out = out
       + ["- #strong[" + __typst_text(severity) + "] " + __typst_text(__finding_title(finding) + suffix)]
     if type_of(finding) == "dict" {
-      let detail = __text(finding?.detail ?? finding?.body)
+      const detail = __text(finding?.detail ?? finding?.body)
       if detail != "" {
         out = out + ["  " + __typst_text(detail)]
       }
@@ -198,7 +198,7 @@ fn __append_typst_findings(lines, findings) {
 
 /** Normalize a loose report dictionary into the stable harn-documents shape. */
 pub fn normalize_report(report) {
-  let input = if report == nil {
+  const input = if report == nil {
     {}
   } else {
     report
@@ -215,8 +215,8 @@ pub fn normalize_report(report) {
 
 /** Render a normalized agent report to GitHub-flavored Markdown. */
 pub fn render_markdown_report(report) {
-  let normalized = normalize_report(report)
-  var lines = ["# " + normalized.title]
+  const normalized = normalize_report(report)
+  let lines = ["# " + normalized.title]
   if normalized.subtitle != "" {
     lines = lines + ["", normalized.subtitle]
   }
@@ -230,8 +230,8 @@ pub fn render_markdown_report(report) {
 
 /** Render a normalized agent report to Typst source for deterministic PDF builds. */
 pub fn render_typst_report(report) {
-  let normalized = normalize_report(report)
-  var lines = [
+  const normalized = normalize_report(report)
+  let lines = [
     "#set document(title: " + json_stringify(normalized.title) + ")",
     "#set text(size: 10pt)",
     "",
@@ -256,7 +256,7 @@ pub fn render_typst_report(report) {
 
 /** Build a stable `typst compile` argv for a source file and PDF output file. */
 pub fn typst_compile_command(source_path, pdf_path, options) {
-  var argv = ["typst", "compile", source_path, pdf_path]
+  let argv = ["typst", "compile", source_path, pdf_path]
   if options?.root != nil && __text(options.root) != "" {
     argv = argv + ["--root", __text(options.root)]
   }
@@ -265,7 +265,7 @@ pub fn typst_compile_command(source_path, pdf_path, options) {
 
 /** Build a stable `pandoc` argv for converting Markdown into DOCX. */
 pub fn pandoc_docx_command(markdown_path, docx_path, options) {
-  var argv = ["pandoc", markdown_path, "--from", options?.from ?? "gfm", "--to", "docx", "-o", docx_path]
+  let argv = ["pandoc", markdown_path, "--from", options?.from ?? "gfm", "--to", "docx", "-o", docx_path]
   if options?.reference_doc != nil && __text(options.reference_doc) != "" {
     argv = argv + ["--reference-doc", __text(options.reference_doc)]
   }
@@ -274,8 +274,8 @@ pub fn pandoc_docx_command(markdown_path, docx_path, options) {
 
 /** Build a file artifact reference for runtimes with file artifact support. */
 pub fn file_artifact_spec(uri_or_path, mime_type, options) {
-  let target = __text(uri_or_path)
-  let uri = if starts_with(target, "file://")
+  const target = __text(uri_or_path)
+  const uri = if starts_with(target, "file://")
     || starts_with(target, "artifact://")
     || starts_with(target, "harn-artifact://")
     || starts_with(target, "urn:") {
@@ -283,12 +283,12 @@ pub fn file_artifact_spec(uri_or_path, mime_type, options) {
   } else {
     "file://" + target
   }
-  let local_path = if starts_with(uri, "file://") {
+  const local_path = if starts_with(uri, "file://") {
     replace(uri, "file://", "")
   } else {
     options?.path
   }
-  var spec = {
+  let spec = {
     uri: uri,
     name: __nonempty(options?.name, path_basename(local_path ?? target)),
     mime_type: __nonempty(mime_type, "application/octet-stream"),
@@ -311,8 +311,8 @@ pub fn file_artifact_spec(uri_or_path, mime_type, options) {
 /** Normalize a loose file artifact reference into the stable harn-documents shape. */
 pub fn normalize_file_artifact_spec(input, mime_type, options) {
   if type_of(input) == "dict" {
-    let target = input?.uri ?? input?.path ?? input?.url ?? input?.href ?? ""
-    let merged_options = (input ?? {}) + (options ?? {})
+    const target = input?.uri ?? input?.path ?? input?.url ?? input?.href ?? ""
+    const merged_options = (input ?? {}) + (options ?? {})
     return file_artifact_spec(target, input?.mime_type ?? input?.mimeType ?? mime_type, merged_options)
   }
   return file_artifact_spec(input, mime_type, options ?? {})
@@ -329,8 +329,8 @@ fn __artifact_size(spec) {
 }
 
 fn __strip_sha256_prefix(value) {
-  let text = __text(value)
-  let lowered = lowercase(text)
+  const text = __text(value)
+  const lowered = lowercase(text)
   if starts_with(lowered, "sha256:") {
     return text.substring(7)
   }
@@ -342,7 +342,7 @@ fn __artifact_sha256(spec) {
 }
 
 fn __validate_choice(value, fallback, allowed, message) {
-  let normalized = lowercase(__nonempty(value, fallback))
+  const normalized = lowercase(__nonempty(value, fallback))
   if allowed.contains(normalized) {
     return normalized
   }
@@ -368,9 +368,9 @@ fn __validate_managed_artifact_visibility(visibility) {
 }
 
 fn __artifact_ref_has_suffix(spec, suffix) {
-  let name = lowercase(__text(spec?.name))
-  let uri = lowercase(__text(spec?.uri))
-  let path = lowercase(__text(spec?.path))
+  const name = lowercase(__text(spec?.name))
+  const uri = lowercase(__text(spec?.uri))
+  const path = lowercase(__text(spec?.path))
   return name.ends_with(suffix) || uri.ends_with(suffix) || path.ends_with(suffix)
 }
 
@@ -382,7 +382,7 @@ pub fn managed_agent_artifact_kind(spec, options) {
   if __text(spec?.managed_kind ?? spec?.managedKind) != "" {
     return __validate_managed_artifact_kind(spec?.managed_kind ?? spec?.managedKind)
   }
-  let mime = lowercase(__text(spec?.mime_type ?? spec?.mimeType))
+  const mime = lowercase(__text(spec?.mime_type ?? spec?.mimeType))
   if mime == ARTIFACT_MANIFEST_MIME_TYPE {
     return "receipt"
   }
@@ -408,7 +408,7 @@ pub fn managed_agent_artifact_kind(spec, options) {
 }
 
 fn __managed_agent_artifact_metadata(spec, options) {
-  var metadata = (spec?.metadata ?? {}) + (options?.metadata ?? {})
+  let metadata = (spec?.metadata ?? {}) + (options?.metadata ?? {})
   if __text(spec?.description) != "" && metadata?.description == nil {
     metadata = metadata + {description: __text(spec.description)}
   }
@@ -426,19 +426,19 @@ fn __managed_agent_artifact_metadata(spec, options) {
 
 /** Build a JSON body for `POST /v1/artifacts` from a file artifact spec. */
 pub fn managed_agent_artifact_register_body(spec, options) {
-  let normalized = normalize_file_artifact_spec(spec, spec?.mime_type ?? spec?.mimeType ?? "", {})
-  var body = {
+  const normalized = normalize_file_artifact_spec(spec, spec?.mime_type ?? spec?.mimeType ?? "", {})
+  let body = {
     kind: managed_agent_artifact_kind(normalized, options ?? {}),
     mime_type: __nonempty(normalized.mime_type, "application/octet-stream"),
     uri: normalized.uri,
     visibility: __validate_managed_artifact_visibility(options?.visibility ?? normalized?.visibility),
     metadata: __managed_agent_artifact_metadata(normalized, options ?? {}),
   }
-  let sha = __artifact_sha256(normalized)
+  const sha = __artifact_sha256(normalized)
   if sha != "" {
     body = body + {sha256: sha}
   }
-  let size = __artifact_size(normalized)
+  const size = __artifact_size(normalized)
   if size != nil {
     body = body + {size_bytes: size}
   }
@@ -449,7 +449,7 @@ pub fn managed_agent_artifact_register_body(spec, options) {
     body = body + {title: __text(options.title)}
   }
   for field in ["workspace_id", "session_id", "task_id", "receipt_id"] {
-    let value = options?[field] ?? normalized?[field]
+    const value = options?.[field] ?? normalized?.[field]
     if __text(value) != "" {
       body[field] = __text(value)
     }
@@ -462,7 +462,7 @@ pub fn managed_agent_artifact_register_body(spec, options) {
 
 /** Build a JSON body for registering a written `harn.artifacts.v1` manifest file. */
 pub fn managed_agent_artifact_manifest_register_body(manifest, manifest_uri_or_path, options) {
-  let spec = artifact_manifest_file_spec(
+  const spec = artifact_manifest_file_spec(
     manifest_uri_or_path,
     manifest,
     {
@@ -483,9 +483,9 @@ pub fn managed_agent_artifact_manifest_register_body(manifest, manifest_uri_or_p
 }
 
 fn __managed_agent_bundle_context_options(options) {
-  var shared = {}
+  let shared = {}
   for field in ["workspace_id", "session_id", "task_id", "receipt_id", "source"] {
-    if __text(options?[field]) != "" {
+    if __text(options?.[field]) != "" {
       shared[field] = __text(options[field])
     }
   }
@@ -496,7 +496,7 @@ fn __managed_agent_bundle_context_options(options) {
 }
 
 fn __managed_agent_bundle_artifact_options(options) {
-  let context = __managed_agent_bundle_context_options(options ?? {})
+  const context = __managed_agent_bundle_context_options(options ?? {})
   if __text(options?.visibility) != "" {
     return context + {visibility: __text(options.visibility)}
   }
@@ -505,9 +505,9 @@ fn __managed_agent_bundle_artifact_options(options) {
 
 /** Build a query dictionary for `GET /v1/artifacts`. */
 pub fn managed_agent_artifact_list_query(options) {
-  var query = {}
+  let query = {}
   for field in ["workspace_id", "session_id", "task_id"] {
-    if __text(options?[field]) != "" {
+    if __text(options?.[field]) != "" {
       query[field] = __text(options[field])
     }
   }
@@ -539,7 +539,7 @@ pub fn managed_agent_artifact_register_request(spec, options) {
 
 /** Build deterministic HTTP request descriptors for registering several artifacts. */
 pub fn managed_agent_artifact_register_requests(artifacts, options) {
-  var requests = []
+  let requests = []
   for artifact_item in __as_list(artifacts) {
     requests = requests + [managed_agent_artifact_register_request(artifact_item, options ?? {})]
   }
@@ -558,10 +558,10 @@ pub fn managed_agent_artifact_manifest_register_request(manifest, manifest_uri_o
 
 /** Build artifact and manifest registration requests for a complete artifact bundle. */
 pub fn managed_agent_artifact_bundle_register_requests(manifest, manifest_uri_or_path, options) {
-  let context = __managed_agent_bundle_context_options(options ?? {})
-  let artifact_options = __managed_agent_bundle_artifact_options(options ?? {})
+  const context = __managed_agent_bundle_context_options(options ?? {})
+  const artifact_options = __managed_agent_bundle_artifact_options(options ?? {})
     + (options?.artifact_options ?? options?.artifactOptions ?? {})
-  let manifest_options = context + (options?.manifest_options ?? options?.manifestOptions ?? {})
+  const manifest_options = context + (options?.manifest_options ?? options?.manifestOptions ?? {})
   return managed_agent_artifact_register_requests(manifest?.artifacts ?? [], artifact_options)
     + [managed_agent_artifact_manifest_register_request(manifest, manifest_uri_or_path, manifest_options)]
 }
@@ -604,19 +604,19 @@ fn __managed_agent_artifact_read_request(path, options) {
 }
 
 fn __artifact_id(spec, options) {
-  let explicit = __text(
+  const explicit = __text(
     options?.artifact_id ?? options?.artifactId ?? spec?.artifact_id ?? spec?.artifactId ?? spec?.id,
   )
   if explicit != "" {
     return explicit
   }
-  let seed = __text(spec?.uri) + "\n" + __text(spec?.sha256 ?? spec?.content_sha256) + "\n"
+  const seed = __text(spec?.uri) + "\n" + __text(spec?.sha256 ?? spec?.content_sha256) + "\n"
     + __text(spec?.mime_type)
   return "file-" + sha256(seed)
 }
 
 fn __manifest_artifact_id(manifest, options) {
-  let explicit = __text(options?.artifact_id ?? options?.artifactId ?? manifest?.artifact_id ?? manifest?.artifactId)
+  const explicit = __text(options?.artifact_id ?? options?.artifactId ?? manifest?.artifact_id ?? manifest?.artifactId)
   if explicit != "" {
     return explicit
   }
@@ -624,7 +624,7 @@ fn __manifest_artifact_id(manifest, options) {
 }
 
 fn __normalize_artifact_list(artifacts) {
-  var normalized = []
+  let normalized = []
   for artifact_item in __as_list(artifacts) {
     normalized = normalized + [normalize_file_artifact_spec(artifact_item, artifact_item?.mime_type ?? "", {})]
   }
@@ -632,10 +632,10 @@ fn __normalize_artifact_list(artifacts) {
 }
 
 fn __total_size_bytes(artifacts) {
-  var total = 0
-  var has_size = false
+  let total = 0
+  let has_size = false
   for artifact_item in artifacts {
-    let size = __artifact_size(artifact_item)
+    const size = __artifact_size(artifact_item)
     if size != nil {
       total = total + size
       has_size = true
@@ -649,15 +649,15 @@ fn __total_size_bytes(artifacts) {
 
 /** Build a portable manifest for one or more file artifacts. */
 pub fn artifact_manifest(artifacts, options) {
-  let normalized = __normalize_artifact_list(artifacts)
-  var manifest = {
+  const normalized = __normalize_artifact_list(artifacts)
+  let manifest = {
     schema_version: __nonempty(options?.schema_version, ARTIFACT_MANIFEST_SCHEMA_VERSION),
     kind: "artifact_manifest",
     title: __nonempty(options?.title, "Artifact manifest"),
     artifact_count: len(normalized),
     artifacts: normalized,
   }
-  let total_size = __total_size_bytes(normalized)
+  const total_size = __total_size_bytes(normalized)
   if total_size != nil {
     manifest = manifest + {total_size_bytes: total_size}
   }
@@ -697,9 +697,9 @@ pub fn artifact_manifest_file_spec(manifest_path, manifest, options) {
 
 /** Build a canonical Harn ACP `session/update` artifact extension payload. */
 pub fn artifact_session_update(spec, options) {
-  let normalized = normalize_file_artifact_spec(spec, spec?.mime_type ?? "", {})
-  let size = __artifact_size(normalized)
-  var harn = {
+  const normalized = normalize_file_artifact_spec(spec, spec?.mime_type ?? "", {})
+  const size = __artifact_size(normalized)
+  let harn = {
     artifactId: __artifact_id(normalized, options ?? {}),
     kind: __nonempty(options?.kind, "file"),
     title: __nonempty(options?.title, normalized.name),
@@ -719,21 +719,21 @@ pub fn artifact_session_update(spec, options) {
 
 /** Render a plain-text fallback for a `harn.artifacts.v1` manifest. */
 pub fn artifact_manifest_fallback(manifest) {
-  let title = __nonempty(manifest?.title, "Artifact manifest")
-  let count = manifest?.artifact_count ?? len(__as_list(manifest?.artifacts))
-  var lines = [title + ": " + to_string(count) + " file artifact(s)"]
+  const title = __nonempty(manifest?.title, "Artifact manifest")
+  const count = manifest?.artifact_count ?? len(__as_list(manifest?.artifacts))
+  let lines = [title + ": " + to_string(count) + " file artifact(s)"]
   if manifest?.total_size_bytes != nil {
     lines = lines + ["Total size: " + to_string(manifest.total_size_bytes) + " bytes"]
   }
-  var rendered = 0
+  let rendered = 0
   for artifact_item in __as_list(manifest?.artifacts) {
     if rendered >= 10 {
       continue
     }
-    let name = __nonempty(artifact_item?.name, "file artifact")
-    let mime = __nonempty(artifact_item?.mime_type, "application/octet-stream")
-    let size = __artifact_size(artifact_item)
-    let suffix = if size == nil {
+    const name = __nonempty(artifact_item?.name, "file artifact")
+    const mime = __nonempty(artifact_item?.mime_type, "application/octet-stream")
+    const size = __artifact_size(artifact_item)
+    const suffix = if size == nil {
       ""
     } else {
       ", " + to_string(size) + " bytes"
@@ -749,11 +749,11 @@ pub fn artifact_manifest_fallback(manifest) {
 
 /** Build a canonical Harn ACP artifact update for a bundle manifest. */
 pub fn artifact_manifest_session_update(manifest, options) {
-  let digest = artifact_manifest_digest(manifest)
-  let base_metadata = {schema_url: ARTIFACT_MANIFEST_SCHEMA_URL, digest: digest}
-  let metadata = (options?.metadata ?? {}) + base_metadata
-  let serialized = json_stringify(manifest)
-  var harn = {
+  const digest = artifact_manifest_digest(manifest)
+  const base_metadata = {schema_url: ARTIFACT_MANIFEST_SCHEMA_URL, digest: digest}
+  const metadata = (options?.metadata ?? {}) + base_metadata
+  const serialized = json_stringify(manifest)
+  let harn = {
     artifactId: __manifest_artifact_id(manifest, options ?? {}),
     kind: "artifact_manifest",
     title: __nonempty(options?.title, __nonempty(manifest?.title, "Artifact manifest")),
@@ -769,7 +769,7 @@ pub fn artifact_manifest_session_update(manifest, options) {
 
 /** Build `{kind, spec, options}` for calling Harn core `artifact_emit`. */
 pub fn artifact_manifest_emit_args(manifest, options) {
-  var emit_options = {
+  let emit_options = {
     artifact_id: __manifest_artifact_id(manifest, options ?? {}),
     title: __nonempty(options?.title, __nonempty(manifest?.title, "Artifact manifest")),
     fallback: __nonempty(options?.fallback, artifact_manifest_fallback(manifest)),
@@ -788,7 +788,7 @@ pub fn artifact_manifest_emit_args(manifest, options) {
 
 /** Render artifact session updates as newline-delimited JSON for logs or fixtures. */
 pub fn artifact_session_updates_ndjson(artifacts, options) {
-  var lines = []
+  let lines = []
   for artifact_item in __as_list(artifacts) {
     lines = lines + [json_stringify(artifact_session_update(artifact_item, options ?? {}))]
   }
@@ -800,11 +800,11 @@ pub fn artifact_session_updates_ndjson(artifacts, options) {
 
 /** Return a deterministic report bundle without writing files. */
 pub fn report_bundle(report, output_stem) {
-  let stem = __text(output_stem)
-  let markdown_path = stem + ".md"
-  let typst_path = stem + ".typ"
-  let pdf_path = stem + ".pdf"
-  let docx_path = stem + ".docx"
+  const stem = __text(output_stem)
+  const markdown_path = stem + ".md"
+  const typst_path = stem + ".typ"
+  const pdf_path = stem + ".pdf"
+  const docx_path = stem + ".docx"
   return {
     markdown_path: markdown_path,
     typst_path: typst_path,
