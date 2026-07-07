@@ -4,7 +4,7 @@ version = "0.1.6"
 description = "Deterministic document report helpers and file artifact references for Harn agents."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/burin-labs/harn-documents"
-harn = ">=0.9,<0.10"
+harn = ">=0.10,<0.11"
 docs_url = "docs/api.md"
 
 [exports]
