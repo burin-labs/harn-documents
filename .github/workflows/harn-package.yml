@@ -14,7 +14,7 @@ jobs:
       HARN_VERSION: 0.10.0
       HARN_ARCHIVE: harn-x86_64-unknown-linux-gnu.tar.gz
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.0
       - name: Install Harn CLI
         run: |
           set -euo pipefail
