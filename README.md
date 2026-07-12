@@ -11,7 +11,7 @@ without pushing PDF, DOCX, or renderer dependencies into Harn core.
 ## Install
 
 ```bash
-harn add github.com/burin-labs/harn-documents@main
+harn add github.com/burin-labs/harn-documents@v0.1.7
 ```
 
 For local multi-repo development, use a path dependency instead:
