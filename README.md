@@ -8,17 +8,20 @@ the reusable artifact vocabulary, report intermediate representation, package
 metadata, and skill instructions. Burin can layer coding-agent report UX on top
 without pushing PDF, DOCX, or renderer dependencies into Harn core.
 
-## Quickstart
+## Install
+
+```bash
+harn add github.com/burin-labs/harn-documents@main
+```
+
+For local multi-repo development, use a path dependency instead:
 
 ```bash
 harn add ../harn-documents
-harn test tests/
-harn package check
-harn package docs
-harn package pack
 ```
 
 Consumers import stable modules through the `[exports]` entries in `harn.toml`.
+The generated [API reference](docs/api.md) describes every export.
 
 ```harn
 import {
@@ -80,6 +83,15 @@ let bundle_requests = managed_agent_artifact_bundle_register_requests(
   "artifact://session/artifact-manifest.json",
   {visibility: "internal", session_id: "ses_123", task_id: "task_456"},
 )
+```
+
+## Development
+
+```bash
+harn test tests/
+harn package check
+harn package docs --check
+harn package pack --dry-run
 ```
 
 ## Layering

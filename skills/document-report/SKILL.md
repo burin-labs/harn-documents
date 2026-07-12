@@ -5,7 +5,7 @@ description: Generate report-ready Markdown, Typst, PDF, DOCX, or presentation a
 when-to-use: Use when the user asks for a PDF report, DOCX, Google Docs-ready draft, PowerPoint/Slides outline, or durable file artifact from agent findings.
 allowed-tools: ["*"]
 ---
-# Document Report
+# Document report
 
 Use `harn-documents` for the deterministic middle of a document workflow:
 
@@ -14,9 +14,9 @@ Use `harn-documents` for the deterministic middle of a document workflow:
    `render_typst_report(report)`.
 3. Write the rendered source to explicit workspace artifact paths after the user
    has approved the destination.
-4. Preflight external renderers before invoking them:
-   - `typst compile <report.typ> <report.pdf>` for PDF.
-   - `pandoc <report.md> --from gfm --to docx -o <report.docx>` for DOCX.
+4. Preflight external renderers before invoking them. Use
+   `typst_compile_command(...)` for PDF and `pandoc_docx_command(...)` for
+   DOCX instead of rebuilding renderer arguments.
 5. Verify produced files with available deterministic tools such as `stat`,
    `sha256`, `pdftotext`, Poppler rendering, or package-specific checks.
 6. Build file references with `file_artifact_spec(...)`, then collect them with
