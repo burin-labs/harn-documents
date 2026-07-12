@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.7
+
+- Published a Harn 0.10-compatible package release after the module and package
+  metadata replatforming on `main`.
+
 ## 0.1.6
 
 - Added deterministic Managed Agents artifact bundle request helpers that build
