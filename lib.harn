@@ -6,16 +6,6 @@ const ARTIFACT_MANIFEST_SCHEMA_URL = "https://harnlang.com/schemas/artifact-mani
 
 const ARTIFACT_MANIFEST_MIME_TYPE = "application/vnd.harn.artifact-manifest+json"
 
-const MANAGED_AGENT_ARTIFACTS_PATH = "/v1/artifacts"
-
-const MANAGED_AGENT_ARTIFACT_READ_SCOPE = "artifacts:read"
-
-const MANAGED_AGENT_ARTIFACT_WRITE_SCOPE = "artifacts:write"
-
-const MANAGED_AGENT_ARTIFACT_KINDS = ["file", "patch", "image", "log", "diff", "receipt", "snapshot", "dataset", "other"]
-
-const MANAGED_AGENT_ARTIFACT_VISIBILITIES = ["public", "internal", "receipt_only"]
-
 /** Return the canonical Harn artifact manifest schema version string. */
 pub fn artifact_manifest_schema_version() {
   return ARTIFACT_MANIFEST_SCHEMA_VERSION
@@ -29,11 +19,6 @@ pub fn artifact_manifest_schema_url() {
 /** Return the MIME type for serialized Harn artifact manifest JSON files. */
 pub fn artifact_manifest_mime_type() {
   return ARTIFACT_MANIFEST_MIME_TYPE
-}
-
-/** Return the canonical Managed Agents artifacts collection path. */
-pub fn managed_agent_artifacts_path() {
-  return MANAGED_AGENT_ARTIFACTS_PATH
 }
 
 fn __text(value) {
@@ -160,7 +145,12 @@ fn __append_typst_sections(lines, sections) {
       const body = __text(section)
       if body != "" {
         out = out
-          + ["", "== " + __typst_text("Section"), "", "#par(justify: true)[" + __typst_text(body) + "]"]
+          + [
+          "",
+          "== " + __typst_text("Section"),
+          "",
+          "#par(justify: true)[" + __typst_text(body) + "]",
+        ]
       }
     }
   }
@@ -182,7 +172,10 @@ fn __append_typst_findings(lines, findings) {
       " (" + location + ")"
     }
     out = out
-      + ["- #strong[" + __typst_text(severity) + "] " + __typst_text(__finding_title(finding) + suffix)]
+      + [
+      "- #strong[" + __typst_text(severity) + "] "
+        + __typst_text(__finding_title(finding) + suffix),
+    ]
     if type_of(finding) == "dict" {
       const detail = __text(finding?.detail ?? finding?.body)
       if detail != "" {
@@ -265,7 +258,16 @@ pub fn typst_compile_command(source_path, pdf_path, options) {
 
 /** Build a stable `pandoc` argv for converting Markdown into DOCX. */
 pub fn pandoc_docx_command(markdown_path, docx_path, options) {
-  let argv = ["pandoc", markdown_path, "--from", options?.from ?? "gfm", "--to", "docx", "-o", docx_path]
+  let argv = [
+    "pandoc",
+    markdown_path,
+    "--from",
+    options?.from ?? "gfm",
+    "--to",
+    "docx",
+    "-o",
+    docx_path,
+  ]
   if options?.reference_doc != nil && __text(options.reference_doc) != "" {
     argv = argv + ["--reference-doc", __text(options.reference_doc)]
   }
@@ -313,7 +315,11 @@ pub fn normalize_file_artifact_spec(input, mime_type, options) {
   if type_of(input) == "dict" {
     const target = input?.uri ?? input?.path ?? input?.url ?? input?.href ?? ""
     const merged_options = (input ?? {}) + (options ?? {})
-    return file_artifact_spec(target, input?.mime_type ?? input?.mimeType ?? mime_type, merged_options)
+    return file_artifact_spec(
+      target,
+      input?.mime_type ?? input?.mimeType ?? mime_type,
+      merged_options,
+    )
   }
   return file_artifact_spec(input, mime_type, options ?? {})
 }
@@ -328,305 +334,13 @@ fn __artifact_size(spec) {
   return nil
 }
 
-fn __strip_sha256_prefix(value) {
-  const text = __text(value)
-  const lowered = lowercase(text)
-  if starts_with(lowered, "sha256:") {
-    return text.substring(7)
-  }
-  return text
-}
-
-fn __artifact_sha256(spec) {
-  return __strip_sha256_prefix(spec?.sha256 ?? spec?.content_sha256 ?? spec?.contentSha256)
-}
-
-fn __validate_choice(value, fallback, allowed, message) {
-  const normalized = lowercase(__nonempty(value, fallback))
-  if allowed.contains(normalized) {
-    return normalized
-  }
-  throw message
-}
-
-fn __validate_managed_artifact_kind(kind) {
-  return __validate_choice(
-    kind,
-    "file",
-    MANAGED_AGENT_ARTIFACT_KINDS,
-    "managed agent artifact kind must be one of file, patch, image, log, diff, receipt, snapshot, dataset, or other",
-  )
-}
-
-fn __validate_managed_artifact_visibility(visibility) {
-  return __validate_choice(
-    visibility,
-    "internal",
-    MANAGED_AGENT_ARTIFACT_VISIBILITIES,
-    "managed agent artifact visibility must be public, internal, or receipt_only",
-  )
-}
-
-fn __artifact_ref_has_suffix(spec, suffix) {
-  const name = lowercase(__text(spec?.name))
-  const uri = lowercase(__text(spec?.uri))
-  const path = lowercase(__text(spec?.path))
-  return name.ends_with(suffix) || uri.ends_with(suffix) || path.ends_with(suffix)
-}
-
-/** Infer the Managed Agents artifact kind for a file spec. */
-pub fn managed_agent_artifact_kind(spec, options) {
-  if __text(options?.kind) != "" {
-    return __validate_managed_artifact_kind(options.kind)
-  }
-  if __text(spec?.managed_kind ?? spec?.managedKind) != "" {
-    return __validate_managed_artifact_kind(spec?.managed_kind ?? spec?.managedKind)
-  }
-  const mime = lowercase(__text(spec?.mime_type ?? spec?.mimeType))
-  if mime == ARTIFACT_MANIFEST_MIME_TYPE {
-    return "receipt"
-  }
-  if starts_with(mime, "image/") {
-    return "image"
-  }
-  if mime == "text/x-patch" || mime == "application/x-patch"
-    || __artifact_ref_has_suffix(spec, ".patch") {
-    return "patch"
-  }
-  if mime == "text/x-diff" || mime == "application/x-diff" || __artifact_ref_has_suffix(spec, ".diff") {
-    return "diff"
-  }
-  if mime == "application/jsonl" || mime == "application/x-ndjson"
-    || __artifact_ref_has_suffix(spec, ".log") {
-    return "log"
-  }
-  if mime == "text/csv" || mime == "application/parquet" || __artifact_ref_has_suffix(spec, ".csv")
-    || __artifact_ref_has_suffix(spec, ".parquet") {
-    return "dataset"
-  }
-  return "file"
-}
-
-fn __managed_agent_artifact_metadata(spec, options) {
-  let metadata = (spec?.metadata ?? {}) + (options?.metadata ?? {})
-  if __text(spec?.description) != "" && metadata?.description == nil {
-    metadata = metadata + {description: __text(spec.description)}
-  }
-  if __text(options?.source) != "" {
-    metadata = metadata + {source: __text(options.source)}
-  }
-  if __text(options?.schema_url ?? options?.schemaUrl) != "" {
-    metadata = metadata + {schema_url: __text(options?.schema_url ?? options?.schemaUrl)}
-  }
-  if __text(options?.digest) != "" {
-    metadata = metadata + {digest: __text(options.digest)}
-  }
-  return metadata
-}
-
-/** Build a JSON body for `POST /v1/artifacts` from a file artifact spec. */
-pub fn managed_agent_artifact_register_body(spec, options) {
-  const normalized = normalize_file_artifact_spec(spec, spec?.mime_type ?? spec?.mimeType ?? "", {})
-  let body = {
-    kind: managed_agent_artifact_kind(normalized, options ?? {}),
-    mime_type: __nonempty(normalized.mime_type, "application/octet-stream"),
-    uri: normalized.uri,
-    visibility: __validate_managed_artifact_visibility(options?.visibility ?? normalized?.visibility),
-    metadata: __managed_agent_artifact_metadata(normalized, options ?? {}),
-  }
-  const sha = __artifact_sha256(normalized)
-  if sha != "" {
-    body = body + {sha256: sha}
-  }
-  const size = __artifact_size(normalized)
-  if size != nil {
-    body = body + {size_bytes: size}
-  }
-  if __text(normalized?.name) != "" {
-    body = body + {name: __text(normalized.name)}
-  }
-  if __text(options?.title) != "" {
-    body = body + {title: __text(options.title)}
-  }
-  for field in ["workspace_id", "session_id", "task_id", "receipt_id"] {
-    const value = options?.[field] ?? normalized?.[field]
-    if __text(value) != "" {
-      body[field] = __text(value)
-    }
-  }
-  if __text(options?.content_base64 ?? options?.contentBase64) != "" {
-    body = body + {content_base64: __text(options?.content_base64 ?? options?.contentBase64)}
-  }
-  return body
-}
-
-/** Build a JSON body for registering a written `harn.artifacts.v1` manifest file. */
-pub fn managed_agent_artifact_manifest_register_body(manifest, manifest_uri_or_path, options) {
-  const spec = artifact_manifest_file_spec(
-    manifest_uri_or_path,
-    manifest,
-    {
-      name: __nonempty(options?.name, path_basename(__text(manifest_uri_or_path))),
-      description: __nonempty(options?.description, "Harn artifact manifest"),
-    },
-  )
-  return managed_agent_artifact_register_body(
-    spec,
-    (options ?? {})
-      + {
-      kind: __nonempty(options?.kind, "receipt"),
-      visibility: __nonempty(options?.visibility, "receipt_only"),
-      schema_url: ARTIFACT_MANIFEST_SCHEMA_URL,
-      digest: artifact_manifest_digest(manifest),
-    },
-  )
-}
-
-fn __managed_agent_bundle_context_options(options) {
-  let shared = {}
-  for field in ["workspace_id", "session_id", "task_id", "receipt_id", "source"] {
-    if __text(options?.[field]) != "" {
-      shared[field] = __text(options[field])
-    }
-  }
-  if options?.metadata != nil {
-    shared = shared + {metadata: options.metadata}
-  }
-  return shared
-}
-
-fn __managed_agent_bundle_artifact_options(options) {
-  const context = __managed_agent_bundle_context_options(options ?? {})
-  if __text(options?.visibility) != "" {
-    return context + {visibility: __text(options.visibility)}
-  }
-  return context
-}
-
-/** Build a query dictionary for `GET /v1/artifacts`. */
-pub fn managed_agent_artifact_list_query(options) {
-  let query = {}
-  for field in ["workspace_id", "session_id", "task_id"] {
-    if __text(options?.[field]) != "" {
-      query[field] = __text(options[field])
-    }
-  }
-  if options?.limit != nil {
-    query["limit"] = options.limit
-  }
-  return query
-}
-
-/** Return `/v1/artifacts/{artifact_id}` for metadata reads. */
-pub fn managed_agent_artifact_path(artifact_id) {
-  return MANAGED_AGENT_ARTIFACTS_PATH + "/" + url_encode(__text(artifact_id))
-}
-
-/** Return `/v1/artifacts/{artifact_id}/content` for binary content reads. */
-pub fn managed_agent_artifact_content_path(artifact_id) {
-  return managed_agent_artifact_path(artifact_id) + "/content"
-}
-
-/** Build a deterministic HTTP request descriptor for registering an artifact. */
-pub fn managed_agent_artifact_register_request(spec, options) {
-  return __managed_agent_artifact_request(
-    "POST",
-    MANAGED_AGENT_ARTIFACTS_PATH,
-    MANAGED_AGENT_ARTIFACT_WRITE_SCOPE,
-    {body: managed_agent_artifact_register_body(spec, options ?? {})},
-  )
-}
-
-/** Build deterministic HTTP request descriptors for registering several artifacts. */
-pub fn managed_agent_artifact_register_requests(artifacts, options) {
-  let requests = []
-  for artifact_item in __as_list(artifacts) {
-    requests = requests + [managed_agent_artifact_register_request(artifact_item, options ?? {})]
-  }
-  return requests
-}
-
-/** Build a deterministic HTTP request descriptor for registering an artifact manifest. */
-pub fn managed_agent_artifact_manifest_register_request(manifest, manifest_uri_or_path, options) {
-  return __managed_agent_artifact_request(
-    "POST",
-    MANAGED_AGENT_ARTIFACTS_PATH,
-    MANAGED_AGENT_ARTIFACT_WRITE_SCOPE,
-    {body: managed_agent_artifact_manifest_register_body(manifest, manifest_uri_or_path, options ?? {})},
-  )
-}
-
-/** Build artifact and manifest registration requests for a complete artifact bundle. */
-pub fn managed_agent_artifact_bundle_register_requests(manifest, manifest_uri_or_path, options) {
-  const context = __managed_agent_bundle_context_options(options ?? {})
-  const artifact_options = __managed_agent_bundle_artifact_options(options ?? {})
-    + (options?.artifact_options ?? options?.artifactOptions ?? {})
-  const manifest_options = context + (options?.manifest_options ?? options?.manifestOptions ?? {})
-  return managed_agent_artifact_register_requests(manifest?.artifacts ?? [], artifact_options)
-    + [managed_agent_artifact_manifest_register_request(manifest, manifest_uri_or_path, manifest_options)]
-}
-
-/** Build a deterministic HTTP request descriptor for listing artifacts. */
-pub fn managed_agent_artifact_list_request(options) {
-  return __managed_agent_artifact_request(
-    "GET",
-    MANAGED_AGENT_ARTIFACTS_PATH,
-    MANAGED_AGENT_ARTIFACT_READ_SCOPE,
-    {query: managed_agent_artifact_list_query(options ?? {})},
-  )
-}
-
-/** Build a deterministic HTTP request descriptor for reading artifact metadata. */
-pub fn managed_agent_artifact_get_request(artifact_id, options) {
-  return __managed_agent_artifact_read_request(managed_agent_artifact_path(artifact_id), options ?? {})
-}
-
-/** Build a deterministic HTTP request descriptor for downloading artifact content. */
-pub fn managed_agent_artifact_content_request(artifact_id, options) {
-  return __managed_agent_artifact_read_request(
-    managed_agent_artifact_content_path(artifact_id),
-    options ?? {},
-  )
-}
-
-fn __managed_agent_artifact_request(method, path, scope, payload) {
-  return {method: method, path: path, scopes: [scope]}
-    + (payload ?? {})
-}
-
-fn __managed_agent_artifact_read_request(path, options) {
-  return __managed_agent_artifact_request(
-    "GET",
-    path,
-    MANAGED_AGENT_ARTIFACT_READ_SCOPE,
-    {query: options?.query ?? {}},
-  )
-}
-
-fn __artifact_id(spec, options) {
-  const explicit = __text(
-    options?.artifact_id ?? options?.artifactId ?? spec?.artifact_id ?? spec?.artifactId ?? spec?.id,
-  )
-  if explicit != "" {
-    return explicit
-  }
-  const seed = __text(spec?.uri) + "\n" + __text(spec?.sha256 ?? spec?.content_sha256) + "\n"
-    + __text(spec?.mime_type)
-  return "file-" + sha256(seed)
-}
-
-fn __manifest_artifact_id(manifest, options) {
-  const explicit = __text(options?.artifact_id ?? options?.artifactId ?? manifest?.artifact_id ?? manifest?.artifactId)
-  if explicit != "" {
-    return explicit
-  }
-  return "manifest-" + sha256(json_stringify(manifest))
-}
-
 fn __normalize_artifact_list(artifacts) {
   let normalized = []
   for artifact_item in __as_list(artifacts) {
-    normalized = normalized + [normalize_file_artifact_spec(artifact_item, artifact_item?.mime_type ?? "", {})]
+    normalized = normalized
+      + [
+      normalize_file_artifact_spec(artifact_item, artifact_item?.mime_type ?? "", {}),
+    ]
   }
   return normalized
 }
@@ -695,28 +409,6 @@ pub fn artifact_manifest_file_spec(manifest_path, manifest, options) {
   )
 }
 
-/** Build a canonical Harn ACP `session/update` artifact extension payload. */
-pub fn artifact_session_update(spec, options) {
-  const normalized = normalize_file_artifact_spec(spec, spec?.mime_type ?? "", {})
-  const size = __artifact_size(normalized)
-  let harn = {
-    artifactId: __artifact_id(normalized, options ?? {}),
-    kind: __nonempty(options?.kind, "file"),
-    title: __nonempty(options?.title, normalized.name),
-    mimeType: normalized.mime_type,
-    spec: normalized,
-    provenance: options?.provenance ?? {},
-    metadata: options?.metadata ?? {},
-  }
-  if size != nil {
-    harn = harn + {sizeBytes: size}
-  }
-  if __text(options?.fallback) != "" {
-    harn = harn + {fallback: __text(options.fallback)}
-  }
-  return {sessionUpdate: "artifact", _meta: {harn: harn}}
-}
-
 /** Render a plain-text fallback for a `harn.artifacts.v1` manifest. */
 pub fn artifact_manifest_fallback(manifest) {
   const title = __nonempty(manifest?.title, "Artifact manifest")
@@ -745,57 +437,6 @@ pub fn artifact_manifest_fallback(manifest) {
     lines = lines + ["... " + to_string(count - rendered) + " more artifacts"]
   }
   return lines.join("\n")
-}
-
-/** Build a canonical Harn ACP artifact update for a bundle manifest. */
-pub fn artifact_manifest_session_update(manifest, options) {
-  const digest = artifact_manifest_digest(manifest)
-  const base_metadata = {schema_url: ARTIFACT_MANIFEST_SCHEMA_URL, digest: digest}
-  const metadata = (options?.metadata ?? {}) + base_metadata
-  const serialized = json_stringify(manifest)
-  let harn = {
-    artifactId: __manifest_artifact_id(manifest, options ?? {}),
-    kind: "artifact_manifest",
-    title: __nonempty(options?.title, __nonempty(manifest?.title, "Artifact manifest")),
-    mimeType: ARTIFACT_MANIFEST_MIME_TYPE,
-    spec: manifest,
-    fallback: __nonempty(options?.fallback, artifact_manifest_fallback(manifest)),
-    sizeBytes: len(serialized),
-    provenance: options?.provenance ?? {},
-    metadata: metadata,
-  }
-  return {sessionUpdate: "artifact", _meta: {harn: harn}}
-}
-
-/** Build `{kind, spec, options}` for calling Harn core `artifact_emit`. */
-pub fn artifact_manifest_emit_args(manifest, options) {
-  let emit_options = {
-    artifact_id: __manifest_artifact_id(manifest, options ?? {}),
-    title: __nonempty(options?.title, __nonempty(manifest?.title, "Artifact manifest")),
-    fallback: __nonempty(options?.fallback, artifact_manifest_fallback(manifest)),
-    metadata: (options?.metadata ?? {})
-      + {schema_url: ARTIFACT_MANIFEST_SCHEMA_URL, digest: artifact_manifest_digest(manifest)},
-    provenance: options?.provenance ?? {},
-  }
-  if options?.session_id != nil && __text(options.session_id) != "" {
-    emit_options = emit_options + {session_id: __text(options.session_id)}
-  }
-  if options?.max_bytes != nil {
-    emit_options = emit_options + {max_bytes: options.max_bytes}
-  }
-  return {kind: "artifact_manifest", spec: manifest, options: emit_options}
-}
-
-/** Render artifact session updates as newline-delimited JSON for logs or fixtures. */
-pub fn artifact_session_updates_ndjson(artifacts, options) {
-  let lines = []
-  for artifact_item in __as_list(artifacts) {
-    lines = lines + [json_stringify(artifact_session_update(artifact_item, options ?? {}))]
-  }
-  if len(lines) == 0 {
-    return ""
-  }
-  return lines.join("\n") + "\n"
 }
 
 /** Return a deterministic report bundle without writing files. */

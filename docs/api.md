@@ -32,14 +32,6 @@ Return the MIME type for serialized Harn artifact manifest JSON files.
 pub fn artifact_manifest_mime_type()
 ```
 
-### fn `managed_agent_artifacts_path`
-
-Return the canonical Managed Agents artifacts collection path.
-
-```harn
-pub fn managed_agent_artifacts_path()
-```
-
 ### fn `normalize_report`
 
 Normalize a loose report dictionary into the stable harn-documents shape.
@@ -96,110 +88,6 @@ Normalize a loose file artifact reference into the stable harn-documents shape.
 pub fn normalize_file_artifact_spec(input, mime_type, options)
 ```
 
-### fn `managed_agent_artifact_kind`
-
-Infer the Managed Agents artifact kind for a file spec.
-
-```harn
-pub fn managed_agent_artifact_kind(spec, options)
-```
-
-### fn `managed_agent_artifact_register_body`
-
-Build a JSON body for `POST /v1/artifacts` from a file artifact spec.
-
-```harn
-pub fn managed_agent_artifact_register_body(spec, options)
-```
-
-### fn `managed_agent_artifact_manifest_register_body`
-
-Build a JSON body for registering a written `harn.artifacts.v1` manifest file.
-
-```harn
-pub fn managed_agent_artifact_manifest_register_body(manifest, manifest_uri_or_path, options)
-```
-
-### fn `managed_agent_artifact_list_query`
-
-Build a query dictionary for `GET /v1/artifacts`.
-
-```harn
-pub fn managed_agent_artifact_list_query(options)
-```
-
-### fn `managed_agent_artifact_path`
-
-Return `/v1/artifacts/{artifact_id}` for metadata reads.
-
-```harn
-pub fn managed_agent_artifact_path(artifact_id)
-```
-
-### fn `managed_agent_artifact_content_path`
-
-Return `/v1/artifacts/{artifact_id}/content` for binary content reads.
-
-```harn
-pub fn managed_agent_artifact_content_path(artifact_id)
-```
-
-### fn `managed_agent_artifact_register_request`
-
-Build a deterministic HTTP request descriptor for registering an artifact.
-
-```harn
-pub fn managed_agent_artifact_register_request(spec, options)
-```
-
-### fn `managed_agent_artifact_register_requests`
-
-Build deterministic HTTP request descriptors for registering several artifacts.
-
-```harn
-pub fn managed_agent_artifact_register_requests(artifacts, options)
-```
-
-### fn `managed_agent_artifact_manifest_register_request`
-
-Build a deterministic HTTP request descriptor for registering an artifact manifest.
-
-```harn
-pub fn managed_agent_artifact_manifest_register_request(manifest, manifest_uri_or_path, options)
-```
-
-### fn `managed_agent_artifact_bundle_register_requests`
-
-Build artifact and manifest registration requests for a complete artifact bundle.
-
-```harn
-pub fn managed_agent_artifact_bundle_register_requests(manifest, manifest_uri_or_path, options)
-```
-
-### fn `managed_agent_artifact_list_request`
-
-Build a deterministic HTTP request descriptor for listing artifacts.
-
-```harn
-pub fn managed_agent_artifact_list_request(options)
-```
-
-### fn `managed_agent_artifact_get_request`
-
-Build a deterministic HTTP request descriptor for reading artifact metadata.
-
-```harn
-pub fn managed_agent_artifact_get_request(artifact_id, options)
-```
-
-### fn `managed_agent_artifact_content_request`
-
-Build a deterministic HTTP request descriptor for downloading artifact content.
-
-```harn
-pub fn managed_agent_artifact_content_request(artifact_id, options)
-```
-
 ### fn `artifact_manifest`
 
 Build a portable manifest for one or more file artifacts.
@@ -224,44 +112,12 @@ Build a JSON file artifact reference for a manifest written to disk.
 pub fn artifact_manifest_file_spec(manifest_path, manifest, options)
 ```
 
-### fn `artifact_session_update`
-
-Build a canonical Harn ACP `session/update` artifact extension payload.
-
-```harn
-pub fn artifact_session_update(spec, options)
-```
-
 ### fn `artifact_manifest_fallback`
 
 Render a plain-text fallback for a `harn.artifacts.v1` manifest.
 
 ```harn
 pub fn artifact_manifest_fallback(manifest)
-```
-
-### fn `artifact_manifest_session_update`
-
-Build a canonical Harn ACP artifact update for a bundle manifest.
-
-```harn
-pub fn artifact_manifest_session_update(manifest, options)
-```
-
-### fn `artifact_manifest_emit_args`
-
-Build `{kind, spec, options}` for calling Harn core `artifact_emit`.
-
-```harn
-pub fn artifact_manifest_emit_args(manifest, options)
-```
-
-### fn `artifact_session_updates_ndjson`
-
-Render artifact session updates as newline-delimited JSON for logs or fixtures.
-
-```harn
-pub fn artifact_session_updates_ndjson(artifacts, options)
 ```
 
 ### fn `report_bundle`
