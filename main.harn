@@ -14,5 +14,13 @@ pipeline default(task) {
   const manifest = artifact_manifest([artifact_ref], {title: "Document artifact smoke"})
   log(render_markdown_report(report))
   log(json_stringify(manifest))
-  log(artifact_session_updates_ndjson(manifest.artifacts, {}))
+  log(
+    json_stringify(
+      artifact_emit(
+        "artifact_manifest",
+        manifest,
+        {session_id: "harn-documents-smoke", artifact_id: "document-artifact-smoke"},
+      ),
+    ),
+  )
 }

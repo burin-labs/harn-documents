@@ -1,12 +1,12 @@
 # harn-documents
 
-Deterministic document report helpers and file artifact references for Harn
-agents.
+Deterministic report rendering and portable document artifact construction for
+Harn agents.
 
-`harn-documents` is deliberately a Harn package, not a Burin package. Harn owns
-the reusable artifact vocabulary, report intermediate representation, package
-metadata, and skill instructions. Burin can layer coding-agent report UX on top
-without pushing PDF, DOCX, or renderer dependencies into Harn core.
+The package owns document-domain behavior: a small report shape, Markdown and
+Typst rendering, renderer argument construction, and portable file/manifest
+specs. Harn owns artifact validation, session recording, and protocol
+projection.
 
 ## Install
 
@@ -14,89 +14,80 @@ without pushing PDF, DOCX, or renderer dependencies into Harn core.
 harn add github.com/burin-labs/harn-documents@v0.1.7
 ```
 
-For local multi-repo development, use a path dependency instead:
+For local package development:
 
 ```bash
 harn add ../harn-documents
 ```
 
-Consumers import stable modules through the `[exports]` entries in `harn.toml`.
-The generated [API reference](docs/api.md) describes every export.
+Consumers import the stable module exported by `harn.toml`. The generated
+[API reference](docs/api.md) describes every package-owned function.
 
 ```harn
 import {
   artifact_manifest,
-  artifact_manifest_emit_args,
-  artifact_manifest_schema_url,
-  artifact_manifest_session_update,
-  artifact_session_updates_ndjson,
   file_artifact_spec,
-  managed_agent_artifact_bundle_register_requests,
-  managed_agent_artifact_manifest_register_body,
-  managed_agent_artifact_register_request,
   render_markdown_report,
   render_typst_report,
 } from "harn-documents/lib"
 ```
 
-The package returns deterministic Markdown and Typst source. Workflows can write
-those strings to files, invoke `typst compile` or `pandoc`, then build a
-portable file reference with `file_artifact_spec(path, mime, {})`. On Harn
-runtimes with first-class file artifacts, publish that reference with
-`artifact_emit("file", spec, options)`.
+## Reports
 
-`artifact_manifest_schema_url()` returns the Harn-owned JSON Schema for the
-manifest contract:
-`https://harnlang.com/schemas/artifact-manifest.v1.schema.json`.
-
-For headless and managed-agent flows, collect produced files into a manifest and
-emit canonical Harn ACP artifact updates:
+Render deterministic source, write it to an explicit artifact path, and invoke
+the external renderer only after checking that it is available:
 
 ```harn
-let report = file_artifact_spec("out/report.pdf", "application/pdf", {
+const report = {
+  title: "Review findings",
+  summary: "Two findings need attention.",
+  findings: [{severity: "high", title: "Validate the input boundary"}],
+}
+
+const markdown = render_markdown_report(report)
+const typst = render_typst_report(report)
+const compile = typst_compile_command("out/report.typ", "out/report.pdf", {})
+```
+
+The package returns renderer argv instead of starting processes. The calling
+harness retains ownership of command policy, execution, and verification.
+
+## Artifacts
+
+Keep document bytes on disk or in an artifact store. Publish references through
+Harn directly; the runtime validates the specs and projects the resulting event
+to supported agent protocols:
+
+```harn
+const pdf = file_artifact_spec("out/report.pdf", "application/pdf", {
+  name: "report.pdf",
   size_bytes: 12345,
   sha256: "sha256:...",
 })
-let manifest = artifact_manifest([report], {title: "Code findings"})
-let updates = artifact_session_updates_ndjson(manifest.artifacts, {})
-let manifest_update = artifact_manifest_session_update(manifest, {})
-let emit = artifact_manifest_emit_args(manifest, {})
-// artifact_emit(emit.kind, emit.spec, emit.options)
-```
+const manifest = artifact_manifest([pdf], {title: "Review findings"})
 
-For Managed Agents API hosts such as `harn serve api` or Harn Cloud, convert the
-same file references into deterministic `/v1/artifacts` request descriptors:
-
-```harn
-let request = managed_agent_artifact_register_request(report, {
-  visibility: "internal",
-  session_id: "ses_123",
-  task_id: "task_456",
-})
-let manifest_body = managed_agent_artifact_manifest_register_body(
+const file_receipt = artifact_emit("file", pdf, {session_id: session_id})
+const manifest_receipt = artifact_emit(
+  "artifact_manifest",
   manifest,
-  "artifact://session/artifact-manifest.json",
-  {session_id: "ses_123"},
-)
-let bundle_requests = managed_agent_artifact_bundle_register_requests(
-  manifest,
-  "artifact://session/artifact-manifest.json",
-  {visibility: "internal", session_id: "ses_123", task_id: "task_456"},
+  {session_id: session_id},
 )
 ```
+
+`artifact_manifest_schema_url()` returns the Harn-owned JSON Schema for the
+portable manifest contract:
+`https://harnlang.com/schemas/artifact-manifest.v1.schema.json`.
 
 ## Development
 
+Use the version in `.harn-version`:
+
 ```bash
-harn test tests/
+harn check --strict-types lib.harn main.harn tests/test_main.harn
+harn fmt --check lib.harn main.harn tests/test_main.harn
+harn lint --strict lib.harn main.harn tests/test_main.harn
+harn test tests/ --parallel
 harn package check
 harn package docs --check
 harn package pack --dry-run
 ```
-
-## Layering
-
-- Harn core: safe file artifact references and managed-agent artifact APIs.
-- `harn-documents`: reusable report/document helpers, file artifact manifests,
-  ACP update helpers, Managed Agents artifact request helpers, and skills.
-- Burin: coding-agent-specific prompts, report buttons, previews, and product UI.

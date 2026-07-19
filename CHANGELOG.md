@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Require Harn 0.10.28 and call its artifact emission runtime directly.
+- Remove package-owned Managed Agents HTTP descriptors and ACP session-update
+  encoders; Harn now owns artifact validation, recording, and protocol
+  projection.
+
 ## 0.1.7
 
 - Published a Harn 0.10-compatible package release after the module and package
