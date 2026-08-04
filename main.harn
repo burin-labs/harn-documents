@@ -1,6 +1,6 @@
 import "lib"
 
-pipeline default(task) {
+pipeline default(harness: Harness, task) {
   const report = {
     title: "Document artifact smoke",
     summary: "harn-documents renders deterministic report sources.",
@@ -12,11 +12,11 @@ pipeline default(task) {
     {name: "document-artifact-smoke.pdf"},
   )
   const manifest = artifact_manifest([artifact_ref], {title: "Document artifact smoke"})
-  log(render_markdown_report(report))
-  log(json_stringify(manifest))
-  log(
+  harness.stdio.log(render_markdown_report(report))
+  harness.stdio.log(json_stringify(manifest))
+  harness.stdio.log(
     json_stringify(
-      artifact_emit(
+      harness.agent.artifact_emit(
         "artifact_manifest",
         manifest,
         {session_id: "harn-documents-smoke", artifact_id: "document-artifact-smoke"},

@@ -112,19 +112,19 @@ pipeline test_artifact_manifest(task) {
   assert(starts_with(manifest_spec.sha256, "sha256:"))
 }
 
-pipeline test_harn_artifact_emit_receipts(task) {
+pipeline test_harn_artifact_emit_receipts(harness: Harness, task) {
   const report = file_artifact_spec(
     "artifact://session/report.pdf",
     "application/pdf",
     {name: "report.pdf", size_bytes: 1024, sha256: "sha256:" + "d".repeat(64)},
   )
   const manifest = artifact_manifest([report], {title: "Report bundle"})
-  const file_receipt = artifact_emit(
+  const file_receipt = harness.agent.artifact_emit(
     "file",
     report,
     {session_id: "harn-documents-test", artifact_id: "report-file"},
   )
-  const manifest_receipt = artifact_emit(
+  const manifest_receipt = harness.agent.artifact_emit(
     "artifact_manifest",
     manifest,
     {session_id: "harn-documents-test", artifact_id: "report-manifest"},

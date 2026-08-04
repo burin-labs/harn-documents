@@ -13,7 +13,8 @@ Version: `0.1.7`
 Return the canonical Harn artifact manifest schema version string.
 
 ```harn
-pub fn artifact_manifest_schema_version()
+pub fn artifact_manifest_schema_version() {
+}
 ```
 
 ### fn `artifact_manifest_schema_url`
@@ -21,7 +22,8 @@ pub fn artifact_manifest_schema_version()
 Return the public JSON Schema URL for `harn.artifacts.v1` manifests.
 
 ```harn
-pub fn artifact_manifest_schema_url()
+pub fn artifact_manifest_schema_url() {
+}
 ```
 
 ### fn `artifact_manifest_mime_type`
@@ -29,7 +31,8 @@ pub fn artifact_manifest_schema_url()
 Return the MIME type for serialized Harn artifact manifest JSON files.
 
 ```harn
-pub fn artifact_manifest_mime_type()
+pub fn artifact_manifest_mime_type() {
+}
 ```
 
 ### fn `normalize_report`
@@ -37,7 +40,8 @@ pub fn artifact_manifest_mime_type()
 Normalize a loose report dictionary into the stable harn-documents shape.
 
 ```harn
-pub fn normalize_report(report)
+pub fn normalize_report(report) {
+}
 ```
 
 ### fn `render_markdown_report`
@@ -45,7 +49,8 @@ pub fn normalize_report(report)
 Render a normalized agent report to GitHub-flavored Markdown.
 
 ```harn
-pub fn render_markdown_report(report)
+pub fn render_markdown_report(report) {
+}
 ```
 
 ### fn `render_typst_report`
@@ -53,7 +58,8 @@ pub fn render_markdown_report(report)
 Render a normalized agent report to Typst source for deterministic PDF builds.
 
 ```harn
-pub fn render_typst_report(report)
+pub fn render_typst_report(report) {
+}
 ```
 
 ### fn `typst_compile_command`
@@ -61,7 +67,8 @@ pub fn render_typst_report(report)
 Build a stable `typst compile` argv for a source file and PDF output file.
 
 ```harn
-pub fn typst_compile_command(source_path, pdf_path, options)
+pub fn typst_compile_command(source_path, pdf_path, options) {
+}
 ```
 
 ### fn `pandoc_docx_command`
@@ -69,7 +76,8 @@ pub fn typst_compile_command(source_path, pdf_path, options)
 Build a stable `pandoc` argv for converting Markdown into DOCX.
 
 ```harn
-pub fn pandoc_docx_command(markdown_path, docx_path, options)
+pub fn pandoc_docx_command(markdown_path, docx_path, options) {
+}
 ```
 
 ### fn `file_artifact_spec`
@@ -77,7 +85,8 @@ pub fn pandoc_docx_command(markdown_path, docx_path, options)
 Build a file artifact reference for runtimes with file artifact support.
 
 ```harn
-pub fn file_artifact_spec(uri_or_path, mime_type, options)
+pub fn file_artifact_spec(uri_or_path, mime_type, options) {
+}
 ```
 
 ### fn `normalize_file_artifact_spec`
@@ -85,7 +94,8 @@ pub fn file_artifact_spec(uri_or_path, mime_type, options)
 Normalize a loose file artifact reference into the stable harn-documents shape.
 
 ```harn
-pub fn normalize_file_artifact_spec(input, mime_type, options)
+pub fn normalize_file_artifact_spec(input, mime_type, options) {
+}
 ```
 
 ### fn `artifact_manifest`
@@ -93,7 +103,8 @@ pub fn normalize_file_artifact_spec(input, mime_type, options)
 Build a portable manifest for one or more file artifacts.
 
 ```harn
-pub fn artifact_manifest(artifacts, options)
+pub fn artifact_manifest(artifacts, options) {
+}
 ```
 
 ### fn `artifact_manifest_digest`
@@ -101,7 +112,8 @@ pub fn artifact_manifest(artifacts, options)
 Return a deterministic sha256 digest for a manifest object.
 
 ```harn
-pub fn artifact_manifest_digest(manifest)
+pub fn artifact_manifest_digest(manifest) {
+}
 ```
 
 ### fn `artifact_manifest_file_spec`
@@ -109,7 +121,8 @@ pub fn artifact_manifest_digest(manifest)
 Build a JSON file artifact reference for a manifest written to disk.
 
 ```harn
-pub fn artifact_manifest_file_spec(manifest_path, manifest, options)
+pub fn artifact_manifest_file_spec(manifest_path, manifest, options) {
+}
 ```
 
 ### fn `artifact_manifest_fallback`
@@ -117,7 +130,8 @@ pub fn artifact_manifest_file_spec(manifest_path, manifest, options)
 Render a plain-text fallback for a `harn.artifacts.v1` manifest.
 
 ```harn
-pub fn artifact_manifest_fallback(manifest)
+pub fn artifact_manifest_fallback(manifest) {
+}
 ```
 
 ### fn `report_bundle`
@@ -125,7 +139,8 @@ pub fn artifact_manifest_fallback(manifest)
 Return a deterministic report bundle without writing files.
 
 ```harn
-pub fn report_bundle(report, output_stem)
+pub fn report_bundle(report, output_stem) {
+}
 ```
 
 ## Skill Exports
