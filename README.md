@@ -91,3 +91,10 @@ harn package check
 harn package docs --check
 harn package pack --dry-run
 ```
+
+## Contributing
+
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md) first. It explains what belongs in
+this package rather than in Harn, how to verify a change, and what the export
+surface commits you to once a version ships.
+
