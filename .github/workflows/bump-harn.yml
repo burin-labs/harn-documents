@@ -18,6 +18,12 @@ jobs:
     with:
       orchestration-sha: a13ede819023dd37f4b07566a6e50db77688bdc1
       version: ${{ inputs.version }}
+      # This package's API documentation is generated from its exported Harn symbols,
+      # so moving the runtime can change the rendered output. Regenerate it inside the
+      # bump, or the bump commits a tree its own package verification then refuses.
+      refresh-command: |-
+        harn install --locked || harn install
+        harn package docs .
       validate-command: harn package verify .
       publish-failure-for-repair: true
       apply-behavior-preserving-fixes: false
