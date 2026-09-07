@@ -15,7 +15,7 @@ import {
   typst_compile_command,
 } from "../lib"
 
-pipeline test_report_rendering(task) {
+pipeline test_report_rendering(task: any) {
   const report = {
     title: "Code findings",
     subtitle: "Artifact report",
@@ -42,7 +42,7 @@ pipeline test_report_rendering(task) {
   assert_eq(bundle.artifacts[0].mime_type, "application/pdf")
 }
 
-pipeline test_renderer_commands(task) {
+pipeline test_renderer_commands(task: any) {
   assert_eq(
     typst_compile_command("report.typ", "report.pdf", {root: "workspace"}),
     ["typst", "compile", "report.typ", "report.pdf", "--root", "workspace"],
@@ -64,7 +64,7 @@ pipeline test_renderer_commands(task) {
   )
 }
 
-pipeline test_file_artifact_normalization(task) {
+pipeline test_file_artifact_normalization(task: any) {
   const digest = "a".repeat(64)
   const spec = normalize_file_artifact_spec(
     {
@@ -84,7 +84,7 @@ pipeline test_file_artifact_normalization(task) {
   assert_eq(spec.sha256, "sha256:" + digest)
 }
 
-pipeline test_artifact_manifest(task) {
+pipeline test_artifact_manifest(task: any) {
   assert_eq(artifact_manifest_schema_version(), "harn.artifacts.v1")
   assert_eq(
     artifact_manifest_schema_url(),
@@ -112,7 +112,7 @@ pipeline test_artifact_manifest(task) {
   assert(starts_with(manifest_spec.sha256, "sha256:"))
 }
 
-pipeline test_harn_artifact_emit_receipts(harness: Harness, task) {
+pipeline test_harn_artifact_emit_receipts(harness: Harness, task: any) {
   const report = file_artifact_spec(
     "artifact://session/report.pdf",
     "application/pdf",

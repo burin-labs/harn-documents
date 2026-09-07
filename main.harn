@@ -1,6 +1,6 @@
 import "lib"
 
-pipeline default(harness: Harness, task) {
+pipeline default(harness: Harness, task: any) {
   const report = {
     title: "Document artifact smoke",
     summary: "harn-documents renders deterministic report sources.",
