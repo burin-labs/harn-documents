@@ -21,18 +21,18 @@ pub fn artifact_manifest_mime_type() {
   return ARTIFACT_MANIFEST_MIME_TYPE
 }
 
-fn __text(value) {
+fn __text(value: any) {
   if value == nil {
     return ""
   }
   return trim(to_string(value))
 }
 
-fn __line(value) {
+fn __line(value: any) {
   return replace(replace(__text(value), "\r", " "), "\n", " ")
 }
 
-fn __nonempty(value, fallback) {
+fn __nonempty(value: any, fallback: any) {
   const text = __line(value)
   if text == "" {
     return fallback
@@ -40,7 +40,7 @@ fn __nonempty(value, fallback) {
   return text
 }
 
-fn __as_list(value) {
+fn __as_list(value: any) {
   if value == nil {
     return []
   }
@@ -50,21 +50,21 @@ fn __as_list(value) {
   return [value]
 }
 
-fn __finding_title(finding) {
+fn __finding_title(finding: any) {
   if type_of(finding) != "dict" {
     return __line(finding)
   }
   return __nonempty(finding?.title ?? finding?.message ?? finding?.summary, "Finding")
 }
 
-fn __finding_severity(finding) {
+fn __finding_severity(finding: any) {
   if type_of(finding) != "dict" {
     return "info"
   }
   return lowercase(__nonempty(finding?.severity ?? finding?.risk, "info"))
 }
 
-fn __finding_location(finding) {
+fn __finding_location(finding: any) {
   if type_of(finding) != "dict" {
     return ""
   }
@@ -79,7 +79,7 @@ fn __finding_location(finding) {
   return path + ":" + line
 }
 
-fn __append_sections(lines, sections) {
+fn __append_sections(lines: any, sections: any) {
   let out = lines
   for section in __as_list(sections) {
     if type_of(section) == "dict" {
@@ -99,7 +99,7 @@ fn __append_sections(lines, sections) {
   return out
 }
 
-fn __append_findings(lines, findings) {
+fn __append_findings(lines: any, findings: any) {
   const items = __as_list(findings)
   if len(items) == 0 {
     return lines
@@ -127,11 +127,11 @@ fn __append_findings(lines, findings) {
   return out
 }
 
-fn __typst_text(value) {
+fn __typst_text(value: any) {
   return "#text(" + json_stringify(__text(value)) + ")"
 }
 
-fn __append_typst_sections(lines, sections) {
+fn __append_typst_sections(lines: any, sections: any) {
   let out = lines
   for section in __as_list(sections) {
     if type_of(section) == "dict" {
@@ -146,18 +146,18 @@ fn __append_typst_sections(lines, sections) {
       if body != "" {
         out = out
           + [
-          "",
-          "== " + __typst_text("Section"),
-          "",
-          "#par(justify: true)[" + __typst_text(body) + "]",
-        ]
+            "",
+            "== " + __typst_text("Section"),
+            "",
+            "#par(justify: true)[" + __typst_text(body) + "]",
+          ]
       }
     }
   }
   return out
 }
 
-fn __append_typst_findings(lines, findings) {
+fn __append_typst_findings(lines: any, findings: any) {
   const items = __as_list(findings)
   if len(items) == 0 {
     return lines
@@ -173,9 +173,9 @@ fn __append_typst_findings(lines, findings) {
     }
     out = out
       + [
-      "- #strong[" + __typst_text(severity) + "] "
-        + __typst_text(__finding_title(finding) + suffix),
-    ]
+        "- #strong[" + __typst_text(severity) + "] "
+          + __typst_text(__finding_title(finding) + suffix),
+      ]
     if type_of(finding) == "dict" {
       const detail = __text(finding?.detail ?? finding?.body)
       if detail != "" {
@@ -190,7 +190,7 @@ fn __append_typst_findings(lines, findings) {
 }
 
 /** Normalize a loose report dictionary into the stable harn-documents shape. */
-pub fn normalize_report(report) {
+pub fn normalize_report(report: any) {
   const input = if report == nil {
     {}
   } else {
@@ -207,7 +207,7 @@ pub fn normalize_report(report) {
 }
 
 /** Render a normalized agent report to GitHub-flavored Markdown. */
-pub fn render_markdown_report(report) {
+pub fn render_markdown_report(report: any) {
   const normalized = normalize_report(report)
   let lines = ["# " + normalized.title]
   if normalized.subtitle != "" {
@@ -222,7 +222,7 @@ pub fn render_markdown_report(report) {
 }
 
 /** Render a normalized agent report to Typst source for deterministic PDF builds. */
-pub fn render_typst_report(report) {
+pub fn render_typst_report(report: any) {
   const normalized = normalize_report(report)
   let lines = [
     "#set document(title: " + json_stringify(normalized.title) + ")",
@@ -236,11 +236,11 @@ pub fn render_typst_report(report) {
   if normalized.summary != "" {
     lines = lines
       + [
-      "",
-      "== " + __typst_text("Summary"),
-      "",
-      "#par(justify: true)[" + __typst_text(normalized.summary) + "]",
-    ]
+        "",
+        "== " + __typst_text("Summary"),
+        "",
+        "#par(justify: true)[" + __typst_text(normalized.summary) + "]",
+      ]
   }
   lines = __append_typst_sections(lines, normalized.sections)
   lines = __append_typst_findings(lines, normalized.findings)
@@ -248,7 +248,7 @@ pub fn render_typst_report(report) {
 }
 
 /** Build a stable `typst compile` argv for a source file and PDF output file. */
-pub fn typst_compile_command(source_path, pdf_path, options) {
+pub fn typst_compile_command(source_path: any, pdf_path: any, options: any) {
   let argv = ["typst", "compile", source_path, pdf_path]
   if options?.root != nil && __text(options.root) != "" {
     argv = argv + ["--root", __text(options.root)]
@@ -257,7 +257,7 @@ pub fn typst_compile_command(source_path, pdf_path, options) {
 }
 
 /** Build a stable `pandoc` argv for converting Markdown into DOCX. */
-pub fn pandoc_docx_command(markdown_path, docx_path, options) {
+pub fn pandoc_docx_command(markdown_path: any, docx_path: any, options: any) {
   let argv = [
     "pandoc",
     markdown_path,
@@ -275,7 +275,7 @@ pub fn pandoc_docx_command(markdown_path, docx_path, options) {
 }
 
 /** Build a file artifact reference for runtimes with file artifact support. */
-pub fn file_artifact_spec(uri_or_path, mime_type, options) {
+pub fn file_artifact_spec(uri_or_path: any, mime_type: any, options: any) {
   const target = __text(uri_or_path)
   const uri = if starts_with(target, "file://")
     || starts_with(target, "artifact://")
@@ -311,7 +311,7 @@ pub fn file_artifact_spec(uri_or_path, mime_type, options) {
 }
 
 /** Normalize a loose file artifact reference into the stable harn-documents shape. */
-pub fn normalize_file_artifact_spec(input, mime_type, options) {
+pub fn normalize_file_artifact_spec(input: any, mime_type: any, options: any) {
   if type_of(input) == "dict" {
     const target = input?.uri ?? input?.path ?? input?.url ?? input?.href ?? ""
     const merged_options = (input ?? {}) + (options ?? {})
@@ -324,7 +324,7 @@ pub fn normalize_file_artifact_spec(input, mime_type, options) {
   return file_artifact_spec(input, mime_type, options ?? {})
 }
 
-fn __artifact_size(spec) {
+fn __artifact_size(spec: any) {
   if spec?.size_bytes != nil {
     return spec.size_bytes
   }
@@ -334,18 +334,16 @@ fn __artifact_size(spec) {
   return nil
 }
 
-fn __normalize_artifact_list(artifacts) {
+fn __normalize_artifact_list(artifacts: any) {
   let normalized = []
   for artifact_item in __as_list(artifacts) {
     normalized = normalized
-      + [
-      normalize_file_artifact_spec(artifact_item, artifact_item?.mime_type ?? "", {}),
-    ]
+      + [normalize_file_artifact_spec(artifact_item, artifact_item?.mime_type ?? "", {})]
   }
   return normalized
 }
 
-fn __total_size_bytes(artifacts) {
+fn __total_size_bytes(artifacts: any) {
   let total = 0
   let has_size = false
   for artifact_item in artifacts {
@@ -362,7 +360,7 @@ fn __total_size_bytes(artifacts) {
 }
 
 /** Build a portable manifest for one or more file artifacts. */
-pub fn artifact_manifest(artifacts, options) {
+pub fn artifact_manifest(artifacts: any, options: any) {
   const normalized = __normalize_artifact_list(artifacts)
   let manifest = {
     schema_version: __nonempty(options?.schema_version, ARTIFACT_MANIFEST_SCHEMA_VERSION),
@@ -391,26 +389,26 @@ pub fn artifact_manifest(artifacts, options) {
 }
 
 /** Return a deterministic sha256 digest for a manifest object. */
-pub fn artifact_manifest_digest(manifest) {
+pub fn artifact_manifest_digest(manifest: any) {
   return "sha256:" + sha256(json_stringify(manifest))
 }
 
 /** Build a JSON file artifact reference for a manifest written to disk. */
-pub fn artifact_manifest_file_spec(manifest_path, manifest, options) {
+pub fn artifact_manifest_file_spec(manifest_path: any, manifest: any, options: any) {
   return file_artifact_spec(
     manifest_path,
     ARTIFACT_MANIFEST_MIME_TYPE,
     (options ?? {})
       + {
-      name: __nonempty(options?.name, path_basename(__text(manifest_path))),
-      sha256: artifact_manifest_digest(manifest),
-      description: __nonempty(options?.description, "Harn artifact manifest"),
-    },
+        name: __nonempty(options?.name, path_basename(__text(manifest_path))),
+        sha256: artifact_manifest_digest(manifest),
+        description: __nonempty(options?.description, "Harn artifact manifest"),
+      },
   )
 }
 
 /** Render a plain-text fallback for a `harn.artifacts.v1` manifest. */
-pub fn artifact_manifest_fallback(manifest) {
+pub fn artifact_manifest_fallback(manifest: any) {
   const title = __nonempty(manifest?.title, "Artifact manifest")
   const count = manifest?.artifact_count ?? len(__as_list(manifest?.artifacts))
   let lines = [title + ": " + to_string(count) + " file artifact(s)"]
@@ -440,7 +438,7 @@ pub fn artifact_manifest_fallback(manifest) {
 }
 
 /** Return a deterministic report bundle without writing files. */
-pub fn report_bundle(report, output_stem) {
+pub fn report_bundle(report: any, output_stem: any) {
   const stem = __text(output_stem)
   const markdown_path = stem + ".md"
   const typst_path = stem + ".typ"
